@@ -1,4 +1,4 @@
 sessions/*
+!sessions/.gitignore
 data/*
-!data/RCS
-data/RCS/*
+!data/RCS/.gitignore
