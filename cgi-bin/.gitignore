@@ -1,0 +1,4 @@
+sessions/*
+data/*
+!data/RCS
+data/RCS/*
