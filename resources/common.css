@@ -12,7 +12,7 @@ html
   overflow-y:scroll;
 }
 
-html,body,div,span,object,iframe,p,blockquote,abbr,address,cite,code,del,dfn,img,ins,kbd,q,samp,small,sub,sup,var,i,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,caption,tfoot,thead,article,aside,canvas,details,figcaption,figure,footer,header,hgroup,menu,nav,section,summary,time,mark,audio,video
+html,body,div,span,object,iframe,blockquote,abbr,address,cite,del,dfn,img,ins,kbd,q,samp,small,sub,sup,var,i,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,caption,tfoot,thead,article,aside,canvas,details,figcaption,figure,footer,header,hgroup,menu,nav,section,summary,time,mark,audio,video
 {
   border:0;
   font-size:100%;
@@ -133,6 +133,7 @@ div#wrapper_inner {
 
 #content {
   width: 760px;
+  text-align: justify;
 }
 
 #content table {

@@ -66,6 +66,7 @@ BEGIN {
 # emphasize text in single-quotes 
 /'''/ { gsub(/'''('?'?[^'])*'''/, "<strong>&</strong>"); gsub(/'''/,""); }
 /''/  { gsub(/''('?[^'])*''/, "<em>&</em>"); gsub(/''/,""); }
+/`/  { gsub(/`([^`])*`/, "<code>&</code>"); gsub(/`/,""); }
 
 #headings
 /^-[^-]/ { $0 = "<h2>" substr($0, 2) "</h2>"; close_tags(); print; next; }
