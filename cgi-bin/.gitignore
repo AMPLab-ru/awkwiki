@@ -2,3 +2,4 @@ sessions/*
 !sessions/.gitignore
 data/*
 !data/RCS/.gitignore
+awkpasswd
