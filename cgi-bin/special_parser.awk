@@ -8,6 +8,9 @@
 ################################################################################
 
 BEGIN {
+	pagename_re = "[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*"
+	pagename_all_re = "^" pagename_re "$"
+	pagename_end_re = pagename_re "$"
 	scriptname = ENVIRON["SCRIPT_NAME"]
 	if (special_changes)
 		print "<table>"
@@ -24,18 +27,18 @@ BEGIN {
 
 /[&<>]/ { gsub(/&/, "\\&amp;"); gsub(/</, "\\&lt;"); gsub(/>/, "\\&gt;"); }
 
-special_changes && $9 ~ /^[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*$/ {
+special_changes && $9 ~ pagename_all_re {
 	filenr++
 	print "<tr><td>" generate_link($9) "</td><td>"$7" "$6" "$8"</td></tr>"
 	if (filenr == special_changes)
 		exit
 }
 
-special_index && /^[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*$/ {
+special_index && $0 ~ pagename_all_re {
 	print generate_link($0) "<br>"
 }
 
-special_search && /[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*$/ {
+special_search && $0 ~ pagename_end_re {
 	sub(/^.*[^\/]\//, "")
 	print generate_link($0) "<br>"
 }
@@ -80,7 +83,6 @@ special_diff && (NR > 2) {
 		print "<span class=\"old\">"$0"</span>"
 	else
 		print $0
-
 }
 
 END {
@@ -92,7 +94,7 @@ END {
 
 function generate_link(string)
 {
-	sub(/[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*/, "<a href=\""scriptname"/&\">&</a>", string)
+	sub(pagename_re, "<a href=\""scriptname"/&\">&</a>", string)
 	return(string)
 }
 

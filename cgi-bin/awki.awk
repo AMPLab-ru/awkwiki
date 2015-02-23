@@ -41,6 +41,7 @@ BEGIN {
 	# path: add path to PATH environment
 	localconf["path"] = ""
 	# --- default options ---
+	pagename_re = "[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*"
 
 	scriptname = ENVIRON["SCRIPT_NAME"]
 	
@@ -129,7 +130,7 @@ BEGIN {
 	#set_cookie("count", cookies["count"] ? cookies["count"] + 1 : 0, "", "/")
 	#set_cookie("user", "guest", "Tue, 15-Jan-2015 21:47:38 GMT", "/")
 	header(query["page"])
-	
+
 	if (query["action"] == "edit" && page_editable)
 		edit(query["page"], query["filename"], query["revision"])
 	else if (query["action"] == "save" && query["text"] && page_editable)
@@ -148,7 +149,7 @@ BEGIN {
 		special_history(query["page"], query["filename"])
 	else if (query["page"] && query["action"] == "diff" && query["revision"])
 		special_diff(query["page"], query["filename"], query["revision"], query["revision2"])
-	else 
+	else
 		parse(query["page"], query["filename"], query["revision"])
 
 	footer(query["page"])
@@ -288,14 +289,15 @@ function footer(page,	cmd, year)
 }
 
 # send page to parser script
-function parse(name, filename, revision)
+function parse(name, filename, revision,	parser_cmd)
 {
+	parser_cmd = localconf["parser"] " -v datadir='" localconf["datadir"] "' -v pagename='" name "'" 
 	if (system("[ -f "filename" ]") == 0 ) {
 		if (revision) {
 			print "<em>" _("Displaying old version") " ("revision") " _("of") " <a href=\""scriptname"/" name "\">"name"</a>.</em>"
-			system("co -q -p'"revision"' " filename " | "localconf["parser"] " -v datadir='"localconf["datadir"] "'")
+			system("co -q -p'"revision"' " filename " | " parser_cmd)
 		} else
-			system(localconf["parser"] " -v datadir='"localconf["datadir"] "' " filename)
+			system(parser_cmd " " filename)
 	}
 }
 
@@ -477,7 +479,7 @@ function clear_str(str)
 # *** !Important for Security! ***
 function clear_pagename(str, r)
 {
-	if (match(str, /[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*/)) {
+	if (match(str, pagename_re)) {
 		return substr(str, RSTART, RLENGTH)
 	} else
 		return ""

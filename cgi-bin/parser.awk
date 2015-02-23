@@ -8,6 +8,7 @@
 ################################################################################
 
 BEGIN {
+	pagename_re = "[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*"
 	list["ol"] = 0
 	list["ul"] = 0
 	scriptname = ENVIRON["SCRIPT_NAME"]
@@ -15,7 +16,7 @@ BEGIN {
 	
 	cmd = "ls " datadir
 	while (cmd | getline ls_out > 0)
-		if (match(ls_out, /[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*/) &&
+		if (match(ls_out, pagename_re) &&
 		    substr(ls_out, RSTART + RLENGTH) !~ /,v/) {
 			page = substr(ls_out, RSTART, RLENGTH)
 			pages[page] = 1
@@ -30,7 +31,7 @@ BEGIN {
 /[&<>]/ { gsub(/&/, "\\&amp;");	gsub(/</, "\\&lt;"); gsub(/>/, "\\&gt;"); }
 
 # generate links
-/[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*/ ||
+pagename_re ||
 /(https?|ftp|gopher|mailto|news):/ {
 	tmpline = ""
 	for (i = 1; i <= NF; i++) {
@@ -45,13 +46,14 @@ BEGIN {
 			# remove mailto: in link description
 			sub(/>mailto:/, ">",field)
 		# links for awkipages
-		} else if (field ~ /(^|[[,.?;:'"\(\t])[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*/ && field !~ /''''''/) {
-			match(field, /[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*/)
+#} else if (field ~ /(^|[[,.?;:'"\(\t])[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*/ && field !~ /''''''/) {
+		} else if (field ~ pagename_re && field !~ /''''''/) {
+			match(field, pagename_re)
 			tmp_pagename = substr(field, RSTART, RLENGTH)
 			if (pages[tmp_pagename])
-				sub(/[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*/, "<a href=\""scriptname"/&\">&</a>", field)
+				sub(pagename_re, "<a href=\""scriptname"/&\">&</a>", field)
 			else
-				sub(/[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*/, "&<a href=\""scriptname"/&\">?</a>", field)
+				sub(pagename_re, "&<a href=\""scriptname"/&\">?</a>", field)
 		}
 		tmpline = tmpline field OFS
 	}
@@ -61,7 +63,7 @@ BEGIN {
 
 
 # remove six single quotes (Wiki''''''Links)
-{ gsub(/''''''/,""); }
+{ gsub(/''''''/, "") }
 
 # emphasize text in single-quotes 
 /'''/ { gsub(/'''('?'?[^'])*'''/, "<strong>&</strong>"); gsub(/'''/,""); }
@@ -93,24 +95,52 @@ BEGIN {
 	next
 }
 
+/^#/ {
+	sub(/^# */, "")
+	categories = $0
+	if (blankline == 1) {
+		print "<p>"; blankline = 0
+	}
+	next
+}
+
 NR == 1 { print "<p>"; }
 
 {
-	close_tags();
+	close_tags()
 	
 	# print paragraph when blankline registered
 	if (blankline == 1) {
-		print "<p>";
-		blankline=0;
+		print "<p>"; blankline = 0
 	}
 
-	#print line
-	print;
+	print
 }
 
 END {
 	$0 = ""
-	close_tags();
+	close_tags()
+	category_reference()
+
+	if (categories) {
+		print "<br><hr>"
+		print categories
+	}
+}
+
+function category_reference(	cmd, list)
+{
+	cmd = "grep -wl '^#.*" pagename "' " datadir "*"
+	while (cmd | getline > 0) {
+		if (!list) { list = "ok"; print "<ul>" }
+		sub(/^.*[^\/]\//, "")
+		sub(pagename_re, "<li><a href=\""scriptname"/&\">&</a></li>")
+		print
+	}
+	if (list)
+		print "</ul>"
+
+	close(cmd)
 }
 
 function close_tags(not)
