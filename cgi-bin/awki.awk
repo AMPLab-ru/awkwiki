@@ -297,7 +297,7 @@ function parse(name, filename, revision,	parser_cmd)
 			print "<em>" _("Displaying old version") " ("revision") " _("of") " <a href=\""scriptname"/" name "\">"name"</a>.</em>"
 			system("co -q -p'"revision"' " filename " | " parser_cmd)
 		} else
-			system(parser_cmd " " filename)
+			system("cat " filename " | ./refer.awk " " | " parser_cmd)
 	}
 }
 
