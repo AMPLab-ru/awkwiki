@@ -2,6 +2,7 @@
 
 BEGIN {
 	refer_entry_fmt = "\t1 %A %T.[: %I][, %D][: %H]"
+	join_authors = ", "
 }
 
 /\s*%REF%\s*$/ {
@@ -24,11 +25,24 @@ inside_refer == 1 {
 		inside_entry = 1
 
 		tag = toupper(substr($0, 1, 2))
+		if (tag == "%A") {
+			concat_authors(substr($0, 4))
+			next
+		}
 		ref_entry[tag] = substr($0, 4)
 
 	} else if (match($0, /^\s*$/)) {
 		entry_finish()
 	}
+}
+
+function concat_authors(s) {
+	if (ref_entry["%NA"] == 0) {
+		ref_entry["%A"] = s
+	} else {
+		ref_entry["%A"] = ref_entry["%A"] join_authors s
+	}
+	ref_entry["%NA"] += 1
 }
 
 function entry_finish() {
