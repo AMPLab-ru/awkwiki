@@ -78,8 +78,8 @@ pagename_re ||
 # horizontal line
 /^----/ { sub(/^----+/, "<hr>"); blankline = 1; close_tags(); print; next; }
 
-/^\t+[*]/ { close_tags("list"); parse_list("ul", "ol"); print; next;}
-/^\t+[1]/ { close_tags("list"); parse_list("ol", "ul"); print; next;}
+/^\t+[*]/ { close_tags("list"); parse_list("ul", "ol"); print; next; }
+/^\t+[1]/ { close_tags("list"); parse_list("ol", "ul"); print; next; }
 
 /^ / { 
 	close_tags("pre");
@@ -95,12 +95,16 @@ pagename_re ||
 	next
 }
 
+/^##$/ {
+	close_tags()
+	category_reference()
+	next
+}
+
 /^#/ {
+	close_tags()
 	sub(/^# */, "")
-	categories = $0
-	if (blankline == 1) {
-		print "<p>"; blankline = 0
-	}
+	print "<br><hr>"; print
 	next
 }
 
@@ -120,23 +124,19 @@ NR == 1 { print "<p>"; }
 END {
 	$0 = ""
 	close_tags()
-	category_reference()
-
-	if (categories) {
-		print "<br><hr>"
-		print categories
-	}
 }
 
 function category_reference(	cmd, list)
 {
 	cmd = "grep -wl '^#.*" pagename "' " datadir "*"
+
 	while (cmd | getline > 0) {
-		if (!list) { list = "ok"; print "<ul>" }
+		if (!list) { list = 1; print "<p><ul>" }
 		sub(/^.*[^\/]\//, "")
 		sub(pagename_re, "<li><a href=\""scriptname"/&\">&</a></li>")
 		print
 	}
+
 	if (list)
 		print "</ul>"
 
