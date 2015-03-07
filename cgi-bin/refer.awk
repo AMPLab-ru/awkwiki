@@ -2,7 +2,7 @@
 
 BEGIN {
 	join_expr = ", "
-	fmt_authors = "\t1 %FA %T / %A"
+	fmt_authors = "\t1 %F %T / %A"
 	fmt_issuer = "— %C %I %D"
 	fmt_url = ".— %U"
 }
