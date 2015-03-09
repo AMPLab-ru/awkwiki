@@ -3,14 +3,18 @@
 BEGIN {
 	join_expr = ", "
 	fmt_authors = "\t1 %F %T / %A"
-	fmt_issuer = "— %C %I %D"
-	fmt_url = ".— %U"
+	fmt_issuer = " — %C %I %D"
+	fmt_url = ". — %U"
 }
 
-function fmt_string(a, s,	nsubs) {
+function fmt_string(a, s,	nsubs, tmp) {
 	nsubs = 0
 	for (i in a) {
-		nsubs += sub(i, a[i], s)
+		#encode special char &
+		tmp = a[i]
+		sub("&", "\\\\&", tmp)
+
+		nsubs += sub(i, tmp, s)
 	}
 
 	if (nsubs == 0)
