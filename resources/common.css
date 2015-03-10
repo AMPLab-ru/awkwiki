@@ -12,7 +12,7 @@ html
   overflow-y:scroll;
 }
 
-html,body,div,object,iframe,blockquote,abbr,address,cite,del,dfn,img,ins,kbd,q,samp,small,sub,sup,var,i,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,caption,tfoot,thead,article,aside,canvas,details,figcaption,figure,footer,header,hgroup,menu,nav,section,summary,time,mark,audio,video
+html,body,div,object,iframe,blockquote,abbr,address,cite,del,dfn,img,ins,kbd,q,samp,small,sub,sup,var,i,ol,ul,li,fieldset,form,label,legend,caption,tfoot,thead,article,aside,canvas,details,figcaption,figure,footer,header,hgroup,menu,nav,section,summary,time,mark,audio,video
 {
   border:0;
   font-size:100%;

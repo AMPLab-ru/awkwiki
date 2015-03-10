@@ -25,14 +25,13 @@ BEGIN {
 }
 
 # register blanklines
-/^$/ { blankline = 1; next; }
+/^$/ { blankline = 1; close_tags(); next; }
 
 # HTML entities for <, > and &
 /[&<>]/ { gsub(/&/, "\\&amp;");	gsub(/</, "\\&lt;"); gsub(/>/, "\\&gt;"); }
 
 # generate links
-pagename_re ||
-/(https?|ftp|gopher|mailto|news):/ {
+pagename_re || /(https?|ftp|gopher|mailto|news):/ {
 	tmpline = ""
 	for (i = 1; i <= NF; i++) {
 		field = $i 
@@ -66,9 +65,9 @@ pagename_re ||
 { gsub(/''''''/, "") }
 
 # emphasize text in single-quotes 
-/'''/ { gsub(/'''('?'?[^'])*'''/, "<strong>&</strong>"); gsub(/'''/,""); }
-/''/  { gsub(/''('?[^'])*''/, "<em>&</em>"); gsub(/''/,""); }
-/`/  { gsub(/`([^`])*`/, "<code>&</code>"); gsub(/`/,""); }
+/'''/ { gsub(/'''('?'?[^'])*'''/, "<strong>&</strong>"); gsub(/'''/, ""); }
+/''/  { gsub(/''('?[^'])*''/, "<em>&</em>"); gsub(/''/, ""); }
+/`/  { gsub(/`([^`])*`/, "<code>&</code>"); gsub(/`/, ""); }
 
 #headings
 /^-[^-]/ { $0 = "<h2>" substr($0, 2) "</h2>"; close_tags(); print; next; }
@@ -80,6 +79,22 @@ pagename_re ||
 
 /^\t+[*]/ { close_tags("list"); parse_list("ul", "ol"); print; next; }
 /^\t+[1]/ { close_tags("list"); parse_list("ol", "ul"); print; next; }
+
+# definitions
+/\t[^:][^:]*:.*$/ {
+	close_tags("dl")
+	sub(/^\t/, "")
+	term = $0; sub(/[ ]*:.*$/, "", term)
+	def = $0; sub(/[^:][^:]*:[ ]*/, "", def)
+
+	if (dl != 1) {
+		print "<dl>"; dl = 1
+	}
+	
+	print "<dt>" term "</dt>" 
+	print "\t<dd>" def "</dd>" 
+	next
+}
 
 /^ / { 
 	close_tags("pre");
@@ -156,11 +171,15 @@ function close_tags(not)
 	# close monospace
 	if (not !~ "pre") {
 		if (pre == 1) {
-			print "</pre>"
-			pre = 0
+			print "</pre>"; pre = 0
 		}
 	}
-
+	# close dl
+	if (not !~ "dl") {
+		if (dl == 1) {
+			print "</dl>"; dl = 0
+		}
+	}
 }
 
 function parse_list(this, other)
