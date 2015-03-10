@@ -2,8 +2,13 @@
 
 BEGIN {
 	join_expr = ", "
+
 	fmt_authors = "\t1 %F %T / %A"
+	fmt_q_author = "\t1 %T / %Q"
+	fmt_book = "// %B"
 	fmt_issuer = " — %C %I %D"
+#fmt_serial = " — (%B, %V)"
+	fmt_phys_info = " — %P"
 	fmt_url = ". — %U"
 }
 
@@ -23,15 +28,43 @@ function fmt_string(a, s,	nsubs, tmp) {
 	return s
 }
 
-function print_ref(a,	i, str) {
+function arrlen(a,	i, x) {
+	for (x in a)
+		i++
 
-	out = fmt_string(a, fmt_authors)
-	out = out fmt_string(a, fmt_issuer)
-	out = out fmt_string(a, fmt_url)
+	return i
+}
+
+function add_ending_dot(s) {
+	if (length(s) < 1)
+		return ""
+	if (substr(s, length(s)) != ".")
+		s = s "."
+
+	return s
+}
+
+function print_ref(a,	i, str) {
+	if (arrlen(a) == 0) {
+		print ""
+		return
+	}
+
+	if (a["%Q"] != "")
+		out = fmt_string(a, fmt_q_author)
+	else
+		out = fmt_string(a, fmt_authors)
+
+	out = add_ending_dot(out \
+			     fmt_string(a, fmt_book)) \
+	    add_ending_dot(fmt_string(a, fmt_issuer)) \
+	    add_ending_dot(fmt_string(a, fmt_serial)) \
+	    add_ending_dot(fmt_string(a, fmt_phys_info)) \
+	    add_ending_dot(fmt_string(a, fmt_url))
 
 	#Cleanup fmt string
-	gsub(/ %[A-Z]+/, "", out)
-
+	gsub(/%[A-Z]+/, "", out)
+	
 	printf("%s\n", out)
 }
 
@@ -44,7 +77,6 @@ function parse_first_author(s,	a, initials, surname) {
 		}
 
 		initials = initials " " a[i]
-
 	}
 
 	return surname "," initials
