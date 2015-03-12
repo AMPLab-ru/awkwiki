@@ -24,7 +24,7 @@ BEGIN {
 	# show_changes: Number of changes listed by RecentChanges
 	localconf["show_changes"] = 10
 	# max_post: Bytes accept by POST requests (to avoid DOS).
-	localconf["max_post"] = 100000
+	localconf["max_post"] = 2000000
 	# write_protection: Regex for write protected files
 	# e.g.: "*", "PageOne|PageTwo|^.*NonEditable" 
 	# HINT: to edit these protected pages, upload a .htaccess 
