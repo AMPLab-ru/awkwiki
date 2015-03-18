@@ -18,7 +18,7 @@ BEGIN {
 		# use the power of awk to split the information of rlog
 		RS = "----------------------------\n"
 		FS = "\n"
-		print "<table>\n<tr><th>version</th><th>username</th><th>date</th><th>ip</th><th>comment</th>"
+		print "<table>\n<tr align=\"center\"><th>version</th><th>username</th><th>date</th><th>ip</th><th>comment</th>"
 		print "<th>view version</th><th>edit version</th><th>diff to current</th></tr>" 
 	}
 	if (special_diff)

@@ -11,6 +11,8 @@ BEGIN {
 	pagename_re = "[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*"
 	list["ol"] = 0
 	list["ul"] = 0
+	images = "images/"
+	resources = "/resources/" 
 	scriptname = ENVIRON["SCRIPT_NAME"]
 	FS = "[ ]"
 	
@@ -67,7 +69,7 @@ pagename_re || /(https?|ftp|gopher|mailto|news):/ {
 # emphasize text in single-quotes 
 /'''/ { gsub(/'''('?'?[^'])*'''/, "<strong>&</strong>"); gsub(/'''/, ""); }
 /''/  { gsub(/''('?[^'])*''/, "<em>&</em>"); gsub(/''/, ""); }
-/`/  { gsub(/`([^`])*`/, "<code>&</code>"); gsub(/`/, ""); }
+/``/  { gsub(/``(`?[^`])*```*/, "<code>&</code>"); gsub(/``/, ""); }
 
 #headings
 /^-[^-]/ { $0 = "<h2>" substr($0, 2) "</h2>"; close_tags(); print; next; }
@@ -81,11 +83,11 @@ pagename_re || /(https?|ftp|gopher|mailto|news):/ {
 /^\t+[1]/ { close_tags("list"); parse_list("ol", "ul"); print; next; }
 
 # definitions
-/\t[^:][^:]*:.*$/ {
+/\t[^:][^:]*[ \t]+:[ \t]+.*$/ {
 	close_tags("dl")
 	sub(/^\t/, "")
-	term = $0; sub(/[ ]*:.*$/, "", term)
-	def = $0; sub(/[^:][^:]*:[ ]*/, "", def)
+	term = $0; sub(/[ \t]+:.*$/, "", term)
+	def = $0; sub(/[^:][^:]*:[ \t]+/, "", def)
 
 	if (dl != 1) {
 		print "<dl>"; dl = 1
@@ -123,6 +125,39 @@ pagename_re || /(https?|ftp|gopher|mailto|news):/ {
 	next
 }
 
+/\$\$[^\$]*\$\$/ {
+	while (match($0, /\$\$[^\$]*\$\$/)) {
+		eqn = substr($0, RSTART, RLENGTH)
+		gsub(/\$\$/, "", eqn)
+
+		# Unescape a string back to generate proper image.
+		gsub(/&amp;/, "\\&", eqn); gsub("/&lt;/", "<", eqn); gsub(/&gt;/, ">", eqn)
+
+		image = eqn_gen_image(eqn)
+		gsub(/&/, "\\&")
+		sub(/\$\$[^\$]*\$\$/, "<img alt=\"" eqn "\" src=\"" image "\">")
+	}
+}
+
+/^%EQ$/, /^%EN$/ {
+	if (/^%EQ$/) {
+		eqn = ""; next
+	}
+
+	if (/^%EN$/) {
+		# Unescape a string back to generate proper image.
+		gsub(/&amp;/, "\\&", eqn); gsub("/&lt;/", "<", eqn); gsub(/&gt;/, ">", eqn)
+
+		image = eqn_gen_image(eqn)
+		if (blankline == 1) {
+			print "<p>"; blankline = 0
+		}
+		print "<img style=\"margin-left:2em;\" alt=\"" eqn "\" src=\"" image "\">"; next
+	}
+
+	eqn = eqn ? eqn "\n" $0 : $0; next
+}
+
 NR == 1 { print "<p>"; }
 
 {
@@ -139,6 +174,15 @@ NR == 1 { print "<p>"; }
 END {
 	$0 = ""
 	close_tags()
+}
+
+function eqn_gen_image(str,	cmd, image)
+{
+	sub(/^[ \t]*/, "", str); sub(/[ \t]*$/, "", str)
+
+	cmd = "./eqn_render.sh '" str "'"
+	cmd | getline image; close(cmd)
+	return image
 }
 
 function category_reference(	cmd, list)
