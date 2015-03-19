@@ -10,8 +10,6 @@ EQN=".EQ\n$1\n.EN"
 SUM=$(echo $EQN | sha1sum | cut -d ' ' -f 1)
 IMAGE=$DSTD/$SUM.png
 
-echo "$EQN $SUM" >> out.txt
-
 trap 'rm -f $SUM.ps $SUM.epsi' EXIT INT
 
 test -f $IMAGE && { touch $IMAGE; echo ${IMAGE#$ROOT}; exit 0; }
