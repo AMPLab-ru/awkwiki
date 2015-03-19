@@ -71,7 +71,20 @@ pagename_re || /(https?|ftp|gopher|mailto|news):/ {
 /''/  { gsub(/''('?[^'])*''/, "<em>&</em>"); gsub(/''/, ""); }
 /``/  { gsub(/``(`?[^`])*```*/, "<code>&</code>"); gsub(/``/, ""); }
 
-#headings
+# embedded eqn
+/\$\$[^\$]*\$\$/ {
+	while (match($0, /\$\$[^\$]*\$\$/)) {
+		eqn = substr($0, RSTART, RLENGTH)
+		gsub(/\$\$/, "", eqn)
+		eqn = unescape(eqn)
+
+		image = eqn_gen_image(eqn)
+		gsub(/&/, "\\\\&", eqn)
+		sub(/\$\$[^\$]*\$\$/, "<img alt=\"" eqn "\" src=\"" image "\">")
+	}
+}
+
+# headings
 /^-[^-]/ { $0 = "<h2>" substr($0, 2) "</h2>"; close_tags(); print; next; }
 /^--[^-]/ { $0 = "<h3>" substr($0, 3) "</h3>"; close_tags(); print; next; }
 /^---[^-]/ { $0 = "<h4>" substr($0, 4) "</h4>"; close_tags(); print; next; }
@@ -125,29 +138,13 @@ pagename_re || /(https?|ftp|gopher|mailto|news):/ {
 	next
 }
 
-/\$\$[^\$]*\$\$/ {
-	while (match($0, /\$\$[^\$]*\$\$/)) {
-		eqn = substr($0, RSTART, RLENGTH)
-		gsub(/\$\$/, "", eqn)
-
-		# Unescape a string back to generate proper image.
-		gsub(/&amp;/, "\\&", eqn); gsub("/&lt;/", "<", eqn); gsub(/&gt;/, ">", eqn)
-
-		image = eqn_gen_image(eqn)
-		gsub(/&/, "\\&")
-		sub(/\$\$[^\$]*\$\$/, "<img alt=\"" eqn "\" src=\"" image "\">")
-	}
-}
-
 /^%EQ$/, /^%EN$/ {
 	if (/^%EQ$/) {
 		eqn = ""; next
 	}
 
 	if (/^%EN$/) {
-		# Unescape a string back to generate proper image.
-		gsub(/&amp;/, "\\&", eqn); gsub("/&lt;/", "<", eqn); gsub(/&gt;/, ">", eqn)
-
+		eqn = unescape(eqn)
 		image = eqn_gen_image(eqn)
 		if (blankline == 1) {
 			print "<p>"; blankline = 0
@@ -176,13 +173,19 @@ END {
 	close_tags()
 }
 
-function eqn_gen_image(str,	cmd, image)
+function eqn_gen_image(s,	cmd, image)
 {
-	sub(/^[ \t]*/, "", str); sub(/[ \t]*$/, "", str)
+	sub(/^[ \t]*/, "", s); sub(/[ \t]*$/, "", s)
 
-	cmd = "./eqn_render.sh '" str "'"
+	cmd = "./eqn_render.sh '" s "'"
 	cmd | getline image; close(cmd)
 	return image
+}
+
+function unescape(s)
+{
+	gsub(/&amp;/, "\\&", s); gsub("/&lt;/", "<", s); gsub(/&gt;/, ">", s)
+	return s
 }
 
 function category_reference(	cmd, list)
