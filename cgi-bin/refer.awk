@@ -146,7 +146,7 @@ function join_authors(s) {
 			delete ref_entry
 			continue
 		} else if (/^[^%]/ || /^$/) {
-			continue;
+			continue
 		}
 
 		tag = toupper($1)

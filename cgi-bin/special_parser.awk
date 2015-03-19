@@ -25,7 +25,7 @@ BEGIN {
 		print "<pre>"
 } 
 
-/[&<>]/ { gsub(/&/, "\\&amp;"); gsub(/</, "\\&lt;"); gsub(/>/, "\\&gt;"); }
+/[&<>]/ { gsub(/&/, "\\&amp;"); gsub(/</, "\\&lt;"); gsub(/>/, "\\&gt;") }
 
 special_changes && $9 ~ pagename_all_re {
 	filenr++

@@ -27,10 +27,10 @@ BEGIN {
 }
 
 # register blanklines
-/^$/ { blankline = 1; close_tags(); next; }
+/^$/ { blankline = 1; close_tags(); next }
 
 # HTML entities for <, > and &
-/[&<>]/ { gsub(/&/, "\\&amp;");	gsub(/</, "\\&lt;"); gsub(/>/, "\\&gt;"); }
+/[&<>]/ { gsub(/&/, "\\&amp;");	gsub(/</, "\\&lt;"); gsub(/>/, "\\&gt;") }
 
 # generate links
 pagename_re || /(https?|ftp|gopher|mailto|news):/ {
@@ -67,9 +67,9 @@ pagename_re || /(https?|ftp|gopher|mailto|news):/ {
 { gsub(/''''''/, "") }
 
 # emphasize text in single-quotes 
-/'''/ { gsub(/'''('?'?[^'])*'''/, "<strong>&</strong>"); gsub(/'''/, ""); }
-/''/  { gsub(/''('?[^'])*''/, "<em>&</em>"); gsub(/''/, ""); }
-/``/  { gsub(/``(`?[^`])*```*/, "<code>&</code>"); gsub(/``/, ""); }
+/'''/ { gsub(/'''('?'?[^'])*'''/, "<strong>&</strong>"); gsub(/'''/, "") }
+/''/  { gsub(/''('?[^'])*''/, "<em>&</em>"); gsub(/''/, "") }
+/``/  { gsub(/``(`?[^`])*```*/, "<code>&</code>"); gsub(/``/, "") }
 
 # embedded eqn
 /\$\$[^\$]*\$\$/ {
@@ -85,15 +85,15 @@ pagename_re || /(https?|ftp|gopher|mailto|news):/ {
 }
 
 # headings
-/^-[^-]/ { $0 = "<h2>" substr($0, 2) "</h2>"; close_tags(); print; next; }
-/^--[^-]/ { $0 = "<h3>" substr($0, 3) "</h3>"; close_tags(); print; next; }
-/^---[^-]/ { $0 = "<h4>" substr($0, 4) "</h4>"; close_tags(); print; next; }
+/^-[^-]/ { $0 = "<h2>" substr($0, 2) "</h2>"; close_tags(); print; next }
+/^--[^-]/ { $0 = "<h3>" substr($0, 3) "</h3>"; close_tags(); print; next }
+/^---[^-]/ { $0 = "<h4>" substr($0, 4) "</h4>"; close_tags(); print; next }
 
 # horizontal line
-/^----/ { sub(/^----+/, "<hr>"); blankline = 1; close_tags(); print; next; }
+/^----/ { sub(/^----+/, "<hr>"); blankline = 1; close_tags(); print; next }
 
-/^\t+[*]/ { close_tags("list"); parse_list("ul", "ol"); print; next; }
-/^\t+[1]/ { close_tags("list"); parse_list("ol", "ul"); print; next; }
+/^\t+[*]/ { close_tags("list"); parse_list("ul", "ol"); print; next }
+/^\t+[1]/ { close_tags("list"); parse_list("ol", "ul"); print; next }
 
 # definitions
 /\t[^:][^:]*[ \t]+:[ \t]+.*$/ {
@@ -155,7 +155,7 @@ pagename_re || /(https?|ftp|gopher|mailto|news):/ {
 	eqn = eqn ? eqn "\n" $0 : $0; next
 }
 
-NR == 1 { print "<p>"; }
+NR == 1 { print "<p>" }
 
 {
 	close_tags()
