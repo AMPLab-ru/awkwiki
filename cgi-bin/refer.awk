@@ -56,27 +56,48 @@ function add_ending_dot(s) {
 	return s
 }
 
+function fmt_issuer_section(a,	res) {
+	if ("%C" in a)
+		res = a["%C"]
+
+	if ("%I" in a) {
+		if (res != "")
+			res = res " : "
+		res = res a["%I"]
+	}
+
+	if ("%D" in a) {
+		if (res != "")
+			res = res ", "
+		res = res a["%D"]
+	}
+	if (res != "")
+		res = " — " res
+
+	return res
+}
+
 function print_ref(a,	i, str, out, tmp) {
 	if (arrlen(a) == 0) {
 		print ""
 		return
 	}
 
-	if (a["%Q"] != "")
+	if ("%Q" in a)
 		out = fmt_string(a, fmt_q_author)
 	else
 		out = fmt_string(a, fmt_authors)
 
 	if (get_rec_lang(a) == "ENG")
 		fmt_phys_info = fmt_phys_eng
-	else if (a["%B"] != "") #it's some papers collection
+	else if ("%B" in a) #it's some papers collection
 		fmt_phys_info = fmt_phys_collection
 	else
 		fmt_phys_info = fmt_phys_single
 
 	out = add_ending_dot(out \
 			     fmt_string(a, fmt_book)) \
-	    add_ending_dot(fmt_string(a, fmt_issuer)) \
+	    add_ending_dot(fmt_issuer_section(a)) \
 	    add_ending_dot(fmt_string(a, fmt_phys_info)) \
 	    add_ending_dot(fmt_string(a, fmt_url))
 
