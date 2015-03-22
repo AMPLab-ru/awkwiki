@@ -3,11 +3,11 @@
 BEGIN {
 	join_expr = ", "
 
-	fmt_authors = "\t1 %F %T / %A"
-	fmt_q_author = "\t1 %T / %Q"
+	fmt_pref = "\t1 "
+	fmt_site_name = "%s : "
+	fmt_authors = "%F %T / %A"
+	fmt_q_author = "%T / %Q"
 	fmt_book = " // %B"
-	fmt_issuer = " — %C %I %D"
-
 	fmt_phys_eng = " — %P p."
 	fmt_phys_single = " — %P с."
 	fmt_phys_collection = " — C. %P"
@@ -83,10 +83,12 @@ function print_ref(a,	i, str, out, tmp) {
 		return
 	}
 
+	out = fmt_pref fmt_string(a, fmt_site_name)
+
 	if ("%Q" in a)
-		out = fmt_string(a, fmt_q_author)
+		out = out fmt_string(a, fmt_q_author)
 	else
-		out = fmt_string(a, fmt_authors)
+		out = out fmt_string(a, fmt_authors)
 
 	if (get_rec_lang(a) == "ENG")
 		fmt_phys_info = fmt_phys_eng
@@ -149,7 +151,7 @@ function join_authors(s) {
 			continue
 		}
 
-		tag = toupper($1)
+		tag = $1
 		gsub(/^[^ ]+[ ]+/, "")
 
 		if (tag == "%A") {
