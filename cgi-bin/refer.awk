@@ -117,13 +117,13 @@ function parse_authors(s, is_header,	a, initials, surname) {
 		if (is_header && length(a[i]) > 2)
 			a[i] = substr(a[i], 1, 1) "."
 
-		initials = initials " " a[i]
+		initials = initials " " a[i]
 	}
 
 	if (is_header == 1)
 		return surname "," initials
 
-	return initials " " surname
+	return initials " " surname
 }
 
 #function parse_authors(s,	a
