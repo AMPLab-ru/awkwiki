@@ -139,6 +139,8 @@ function join_authors(s) {
 }
 
 /^%R\(/ {
+	delete ref_entry
+
 	while(getline > 0) {
 		if (/^%R\)/) {
 			print_ref(ref_entry)
