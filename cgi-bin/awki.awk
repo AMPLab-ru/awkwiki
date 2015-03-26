@@ -40,6 +40,8 @@ BEGIN {
 	localconf["rcs"] = 0
 	# path: add path to PATH environment
 	localconf["path"] = ""
+	# sessions directory
+	localconf["sessions"] = "./sessions/"
 	# --- default options ---
 	pagename_re = "[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*"
 
@@ -106,8 +108,8 @@ BEGIN {
 		# *** !Important for Security! ***
 		# id is a filename, check it is sane
 		if (!match(cookies["id"], /[^a-zA-Z0-9]/)) {
-			if (system("[ -f " localconf["sessions"] "/" cookies["id"] " ]") == 0) {
-				system("touch " localconf["sessions"] "/" cookies["id"])
+			if (system("[ -f " localconf["sessions"] cookies["id"] " ]") == 0) {
+				system("touch " localconf["sessions"] cookies["id"])
 				auth_access = 1
 			}
 		} else {
@@ -325,10 +327,10 @@ function welcome(username)
 
 function farewell(cookie,	file, username)
 {
-	file = localconf["sessions"] "/" cookie
+	file = localconf["sessions"] cookie
 	getline username <file
 	close(file)
-	system("rm -f " localconf["sessions"] "/" cookie)
+	system("rm -f " localconf["sessions"] cookie)
 
 	print "<span><b>" username  "</b>, "  _("you are logged out") "</span>"
 }
@@ -363,19 +365,16 @@ function check_login(username, password,	cmd, id)
 	if (!username || !password)
 		return _("Username or password is empty") "."
 
-	#if (username != "admin" && password != "secret")
-	#	return _("Username or password is wrong") "."
-
 	if (system(localconf["login_cmd"] " " username " " password))
 		return _("Username or password is wrong") "."
 
-	cmd = "basename $(mktemp " localconf["sessions"] "/XXXXXXXXXXXXX)"
+	cmd = "basename $(mktemp " localconf["sessions"] "XXXXXXXXXXXXX)"
 	cmd | getline id
 	close(cmd)
 
 	set_cookie("id", id, "", "/")
 	cookies["id"] = id
-	print username > localconf["sessions"] "/" id
+	print username > localconf["sessions"] id
 
 	return "ok"
 }
@@ -416,7 +415,7 @@ function save(page, text, comment, filename,   dtext, date, file, username)
 		gsub(/        /, "\t", dtext)
 	print dtext > filename
 
-	file = localconf["sessions"] "/" cookies["id"]
+	file = localconf["sessions"] cookies["id"]
 	getline username <file
 	close(file)
 
