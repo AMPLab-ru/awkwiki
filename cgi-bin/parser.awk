@@ -11,8 +11,6 @@ BEGIN {
 	pagename_re = "[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*"
 	list["ol"] = 0
 	list["ul"] = 0
-	images = "images/"
-	resources = "/resources/" 
 	scriptname = ENVIRON["SCRIPT_NAME"]
 	FS = "[ ]"
 	
@@ -76,11 +74,12 @@ pagename_re || /(https?|ftp|gopher|mailto|news):/ {
 	while (match($0, /\$\$[^\$]*\$\$/)) {
 		eqn = substr($0, RSTART, RLENGTH)
 		gsub(/\$\$/, "", eqn)
-		eqn = unescape(eqn)
+		# the last gsub() is very important, alt is used in sub() below
+		alt = eqn; gsub(/"/, "\\&quot;", alt); gsub(/&/, "\\\\&", alt)
 
+		eqn = unescape(eqn)
 		image = eqn_gen_image(eqn)
-		gsub(/&/, "\\\\&", eqn)
-		sub(/\$\$[^\$]*\$\$/, "<img alt=\"" eqn "\" src=\"" image "\">")
+		sub(/\$\$[^\$]*\$\$/, "<img alt=\"" alt "\" src=\"" image "\">")
 	}
 }
 
@@ -144,12 +143,14 @@ pagename_re || /(https?|ftp|gopher|mailto|news):/ {
 	}
 
 	if (/^%EN$/) {
+		alt = eqn; gsub(/"/, "\\&quot;", alt)
+
 		eqn = unescape(eqn)
 		image = eqn_gen_image(eqn)
 		if (blankline == 1) {
 			print "<p>"; blankline = 0
 		}
-		print "<img style=\"margin-left:2em;\" alt=\"" eqn "\" src=\"" image "\">"; next
+		print "<img style=\"margin-left:2em;\" alt=\"" alt "\" src=\"" image "\">"; next
 	}
 
 	eqn = eqn ? eqn "\n" $0 : $0; next
