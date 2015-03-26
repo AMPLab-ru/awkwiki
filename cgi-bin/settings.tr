@@ -1,3 +1,10 @@
 .ps 14p
 .vs 16p
 .ss 24 0
+
+.EQ
+chartype "binary" \[st]\[te]\[fa]
+define suchthat "\[st]"
+define existential "\[te]"
+define forall "\[fa]"
+.EN

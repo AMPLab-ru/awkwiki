@@ -4,8 +4,9 @@ ROOT=/var/www/wiki.amplab.ru
 DSTD=$ROOT/resources/images
 GSOPTS="-dEPSCrop -r100 -sDEVICE=pngalpha -dGraphicsAlphaBits=4"
 
-EQN=".EQ\n$1\n.EN"
 #EQN=".EQ\nP sub n,m ( cos theta )\n.EN"
+EQN=$(echo "$1" | sed 's/[ ][ ]*/ /g')
+EQN=".EQ\n$EQN\n.EN"
 
 SUM=$(echo $EQN | sha1sum | cut -d ' ' -f 1)
 IMAGE=$DSTD/$SUM.png
