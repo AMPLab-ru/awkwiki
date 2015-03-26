@@ -11,8 +11,7 @@ BEGIN {
 	# --- default options ---
 	# --- use awki.conf to override default settings ---
 	#
-	# img_tag: HTML img tag  for picture in page header.
-	localconf["img_tag"] = "<img src=\"/awki.png\" width=\"48\" height=\"39\" align=\"left\">"
+	localconf["wiki_name"] = "My"
 	# datadir: Directory for raw pagedata (must be writeable for the script).
 	localconf["datadir"] = "./data/"
 	# parser: Parsing script.
@@ -236,7 +235,7 @@ function header(page,	i, action, label)
 <div id=\"header\">\n\
   <div id=\"header_inner\">\n\
     <div id=\"logo\" class=\"repeat\">\n\
-      <a class=\"logo_link\" href=\""scriptname"/"localconf["default_page"]"\" title=\"AM&PLab Wiki\"></a>\n\
+      <a class=\"logo_link\" href=\""scriptname"/"localconf["default_page"]"\" title=\"" localconf["wiki_name"] " Wiki\"></a>\n\
     </div>\n\
     <div id=\"navigation\" class=\"repeat\">\n\
       <div id=\"utility_nav\">\n\
@@ -286,7 +285,7 @@ function footer(page,	cmd, year)
 	cmd | getline year
 	close(cmd)
 	print "</div></div></div>"
-	print "<div id=\"footer\"><div id=\"footer_inner\">AM&PLab " year "</div></div>"
+	print "<div id=\"footer\"><div id=\"footer_inner\">" localconf["wiki_name"] " " year "</div></div>"
 	print "</div>\n</body>\n</html>"
 }
 
@@ -297,9 +296,9 @@ function parse(name, filename, revision,	parser_cmd)
 	if (system("[ -f "filename" ]") == 0 ) {
 		if (revision) {
 			print "<em>" _("Displaying old version") " ("revision") " _("of") " <a href=\""scriptname"/" name "\">"name"</a>.</em>"
-			system("co -q -p'"revision"' " filename " | " parser_cmd)
+			system("co -q -p'"revision"' " filename " | ./refer.awk | " parser_cmd)
 		} else
-			system("cat " filename " | ./refer.awk " " | " parser_cmd)
+			system("./refer.awk " filename " | " parser_cmd)
 	}
 }
 
