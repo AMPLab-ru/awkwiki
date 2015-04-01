@@ -8,3 +8,26 @@ define suchthat "\[st]"
 define existential "\[te]"
 define forall "\[fa]"
 .EN
+.
+.\"ps 12p 
+.\"vs 16p 
+.
+.\" Add the following definitions to settings.tr
+.\" so they become permanent for each eqn invokation.
+.special S SS
+.char \[ldots] \&.\h'1p'.\h'1p'.
+.char \[vdots] \h'\w`.`u'\Z'\v`+3p`.'\Z'.'\Z'\v`-3p`.'\h'\w`.`u'
+.char \[cdots] \&.\h'1p'.\h'1p'.
+.char \[ddots] \Z'\v`-3p`.'\h'\w'.'u'\Z'.'\h'\w'.'u'\Z'\v`+3p`.'\h'\w'.'u'
+.
+.EQ
+set column_sep 50
+define ldots "\[ldots]"
+define vdots "\[vdots]"
+define ddots "\[ddots]"
+define cdots "vcenter ldots"
+define dots ldots
+.EN
+.
+.\" End of deinitions!
+
