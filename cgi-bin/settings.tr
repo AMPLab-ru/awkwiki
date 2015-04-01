@@ -2,8 +2,6 @@
 .vs 16p
 .ss 24 0
 .
-.\" Add the following definitions to settings.tr
-.\" so they become permanent for each eqn invokation.
 .special S SS
 .char \[ldots] \&.\h'1p'.\h'1p'.
 .char \[vdots] \h'\w`.`u'\Z'\v`+3p`.'\Z'.'\Z'\v`-3p`.'\h'\w`.`u'
@@ -23,5 +21,3 @@ define cdots "vcenter ldots"
 define dots "ldots"
 .EN
 .
-.\" End of deinitions!
-
