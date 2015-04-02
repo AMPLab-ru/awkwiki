@@ -9,6 +9,7 @@
 .char \[ddots] \Z'\v`-3p`.'\h'\w'.'u'\Z'.'\h'\w'.'u'\Z'\v`+3p`.'\h'\w'.'u'
 .
 .EQ
+gbfont TBI
 chartype "binary" \[st]\[te]\[fa]
 define suchthat "\[st]"
 define existential "\[te]"
