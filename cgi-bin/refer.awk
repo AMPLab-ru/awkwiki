@@ -4,7 +4,7 @@ BEGIN {
 	join_expr = ", "
 
 	fmt_pref = "\t1 "
-	fmt_site_name = "%s : "
+	fmt_site_name = "%s [Электронный ресурс] : "
 	fmt_authors = "%F %T / %A"
 	fmt_q_author = "%T / %Q"
 	fmt_book = " // %B"
@@ -105,7 +105,7 @@ function print_ref(a,	i, str, out, tmp) {
 
 	#Cleanup fmt string
 	gsub(/%[A-Z]+/, "", out)
-	
+
 	printf("%s\n", out)
 }
 
@@ -125,8 +125,6 @@ function parse_authors(s, is_header,	a, initials, surname) {
 
 	return initials " " surname
 }
-
-#function parse_authors(s,	a
 
 function join_authors(s) {
 	if (ref_entry["%NA"] == 0) {
