@@ -1,6 +1,8 @@
 #!/bin/sh -e
 
-ROOT=/var/www/wiki.amplab.ru
+. `dirname "$0"`/awki.conf
+
+ROOT="$wiki_root"
 DSTD=$ROOT/resources/images
 GSOPTS="-dEPSCrop -r100 -sDEVICE=pngalpha -dGraphicsAlphaBits=4"
 

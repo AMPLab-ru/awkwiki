@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-passwd_path="./awkpasswd"
+. `dirname "$0"`/awki.conf
 
 test -z "$1" -o -z "$2" && \
     { echo "Provide username and password"; exit 1; }
