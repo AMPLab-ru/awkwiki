@@ -1,4 +1,4 @@
-#!/usr/bin/awk -bf
+#!/usr/bin/awk -f
 ################################################################################
 # awkiawki - wikiwiki clone written in (n|g|m)awk
 # $Id: awki.cgi,v 1.45 2004/07/13 16:34:45 olt Exp $
@@ -6,6 +6,8 @@
 # Copyright (c) 2002 Oliver Tonnhofer (olt@bogosoft.com)
 # See the file `COPYING' for copyright notice.
 ################################################################################
+
+@include "./hexcodes.awk"
 
 BEGIN {
 	# --- default options ---
@@ -516,7 +518,7 @@ function decode(text,   hex, i, hextab, decoded, len, c, c1, c2, code)
 				c2 = tolower(substr(text, i + 2, 1))
 				if (hextab [c1] != "" || hextab [c2] != "") {
 					code = 0 + hextab[c1] * 16 + hextab[c2] + 0
-					c = sprintf ("%c", code)
+					c = hexval[code]
 					i = i + 2
 				}
 			}
@@ -534,7 +536,7 @@ function decode(text,   hex, i, hextab, decoded, len, c, c1, c2, code)
 	
 	# remove last linebreak
 	sub(/[\n\r]*$/,"", decoded)
-	
+
 	return decoded
 }
 
