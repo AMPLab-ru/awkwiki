@@ -24,11 +24,27 @@ BEGIN {
 	close(cmd)
 }
 
-# register blanklines
-/^$/ { blankline = 1; close_tags(); next }
-
 # HTML entities for <, > and &
 /[&<>]/ { gsub(/&/, "\\&amp;");	gsub(/</, "\\&lt;"); gsub(/>/, "\\&gt;") }
+
+/^%NF$/ {
+	print "\n<div class=\"mw-highlight\">"
+	print "<pre>";
+	in_nf = 1;
+	next 
+}
+
+/^%NE$/ {
+	print "</div>"
+	print "</pre>";
+	in_nf = 0;
+	next
+}
+
+in_nf == 1 {print $0; next}
+
+# register blanklines
+/^$/ { blankline = 1; close_tags(); next }
 
 # generate links
 pagename_re || /(https?|ftp|gopher|mailto|news):/ {
