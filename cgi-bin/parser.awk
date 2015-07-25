@@ -9,8 +9,7 @@
 
 BEGIN {
 	pagename_re = "[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*"
-	list["ol"] = 0
-	list["ul"] = 0
+	list["maxlvl"] = 0
 	scriptname = ENVIRON["SCRIPT_NAME"]
 	FS = "[ ]"
 	
@@ -226,11 +225,7 @@ function close_tags(not)
 {
 	# if list is parsed this line print it
 	if (not !~ "list") {
-		if (list["ol"] > 0) {
-			parse_list("ol", "ul")
-		} else if (list["ul"] > 0) {
-			parse_list("ul", "ol")
-		} 
+		parse_list("ol", "ul")
 	}
 	# close monospace
 	if (not !~ "pre") {
@@ -246,7 +241,7 @@ function close_tags(not)
 	}
 }
 
-function parse_list(this, other)
+function parse_list(this, other,	n, i)
 {
 	thislist = list[this]
 	otherlist = list[other]
@@ -256,32 +251,40 @@ function parse_list(this, other)
 		sub(/^\t/,"")
 		tabcount++
 	}
-	
-	# close foreign tags
-	if (otherlist > 0) {
-		while (list[other] >= tabcount) {
-			print "</" other ">"
-			list[other]--
+
+	#close foreign tags in reverse order
+	if (tabcount < list["maxlvl"]) {
+		for (i = list["maxlvl"]; i > tabcount; i--) {
+			#skip unused levels
+			if (list[i, "type"] == "")
+				continue
+
+			print "</" list[i, "type"] ">"
+			list[i, "type"] = ""
 		}
 	}
 
-	# if we are needing more tags we open new
-	if (thislist < tabcount) {
-		while (thislist++ < tabcount) {
-			print "<" this ">"
-		}
-	# if we are needing less tags we close some
-	} else if (thislist > tabcount) {
-		while (thislist-- != tabcount) {
-			print "</" this ">"
-		}
+	if (!tabcount)
+		return
+
+	#if tag on same indent din't match, close it
+	if (tabcount && list[tabcount, "type"] &&
+	    list[tabcount, "type"] != this) {
+		#close this tag
+		print "</" list[tabcount, "type"] ">"
+		list[tabcount, "type"] = ""
 	}
 
-	if (tabcount) {
-		sub(/^[1*]/, "")
-		$0 = "\t<li>" $0 "</li>"
-	}
+
+	if (list[tabcount, "type"] == "")
+		print "<" this ">"
 	
-	list[this] = tabcount
+	sub(/^[1*]/, "")
+	$0 = "\t<li>" $0 "</li>"
+
+	list["maxlvl"] = tabcount
+	list[tabcount, "type"] = this
+
+	return
 }
 
