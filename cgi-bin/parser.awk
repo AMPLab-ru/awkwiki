@@ -259,8 +259,9 @@ function parse_list(this, other)
 	
 	# close foreign tags
 	if (otherlist > 0) {
-		while (otherlist-- > 0) {
+		while (list[other] >= tabcount) {
 			print "</" other ">"
+			list[other]--
 		}
 	}
 
@@ -278,10 +279,9 @@ function parse_list(this, other)
 
 	if (tabcount) {
 		sub(/^[1*]/, "")
-		$0 = "\t<li>" $0
+		$0 = "\t<li>" $0 "</li>"
 	}
 	
-	list[other] = 0
 	list[this] = tabcount
 }
 
