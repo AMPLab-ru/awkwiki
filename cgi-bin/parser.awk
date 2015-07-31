@@ -1,4 +1,4 @@
-#!/usr/bin/awk -bf
+#!/usr/bin/awk -f
 ################################################################################
 # parser.awk - parsing script for awkiawki
 # $Id: parser.awk,v 1.6 2002/12/07 13:46:45 olt Exp $
@@ -45,13 +45,49 @@ in_nf == 1 {print $0; next}
 # register blanklines
 /^$/ { blankline = 1; close_tags(); next }
 
+#[http://url.com|some name]
+/\[/ {
+	while (match($0, /\[[^\[\]]+\]/)) {
+
+		#strip square brackets
+		pref = substr($0, 1, RSTART - 1)
+		ref = substr($0, RSTART + 1, RLENGTH - 2)
+		suf = substr($0, RSTART + RLENGTH)
+
+		n = split(ref, a, "|")
+
+		name = link = a[1]
+		if (link !~ /^((https?|ftp|gopher):\/\/|(mailto|news):)/ &&
+		    link !~ pagename_re)
+			link = "http://" link
+
+		if (n > 1)
+			name = a[2]
+
+		atag = sprintf("<a href=\"%s\"> %s </a> ", link, name)
+		$0 = pref atag suf
+	}
+}
+
 # generate links
-pagename_re || /(https?|ftp|gopher|mailto|news):/ {
+pagename_re || /(https?|ftp|gopher|mailto|news):/ || /\[/ {
 	tmpline = ""
 	for (i = 1; i <= NF; i++) {
 		field = $i 
+
+		#skip already generated links
+		if (field ~ /<a/) {
+			tmp = field
+			for (j = i + 1; j <= NF; j++) {
+				tmp = tmp " " $j
+				if ($j ~ "</a>") {
+					i = j
+					field = tmp
+					break
+				}
+			}
 		# generate HTML img tag for .jpg,.jpeg,.gif,png URLs
-		if (field ~ /https?:\/\/[^\t]*\.(jpg|jpeg|gif|png)/ \
+		} else if (field ~ /https?:\/\/[^\t]*\.(jpg|jpeg|gif|png)/ \
 			&& field !~ /https?:\/\/[^\t]*\.(jpg|jpeg|gif|png)''''''/) {
 			sub(/https?:\/\/[^\t]*\.(jpg|jpeg|gif|png)/, "<img src=\"&\">", field)
 		# links for mailto, news and http, ftp and gopher URLs
@@ -75,9 +111,9 @@ pagename_re || /(https?|ftp|gopher|mailto|news):/ {
 	$0 = substr(tmpline, 1, length(tmpline) - 1)
 }
 
-
 # remove six single quotes (Wiki''''''Links)
 { gsub(/''''''/, "") }
+
 
 # emphasize text in single-quotes 
 /'''/ { gsub(/'''('?'?[^'])*'''/, "<strong>&</strong>"); gsub(/'''/, "") }
