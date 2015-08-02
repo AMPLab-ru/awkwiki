@@ -78,7 +78,8 @@ in_nf == 1 {print $0; next}
 /^$/ { blankline = 1; close_tags(); next }
 
 function escape(s) {
-	gsub("\&", "\\\\&", s)
+	gsub(/\\/, "\\\\", s)
+	gsub(/&/, "\\\\&", s)
 	return s
 }
 
