@@ -42,8 +42,60 @@ BEGIN {
 
 in_nf == 1 {print $0; next}
 
+/^%EQ$/, /^%EN$/ {
+	if (/^%EQ$/) {
+		eqn = ""; next
+	}
+
+	if (/^%EN$/) {
+		alt = eqn; gsub(/"/, "\\&quot;", alt)
+
+		eqn = unescape(eqn)
+		image = eqn_gen_image(eqn)
+		if (blankline == 1) {
+			print "<p>"; blankline = 0
+		}
+		print "<img style=\"margin-left:2em;\" alt=\"" alt "\" src=\"" image "\">"; next
+	}
+
+	eqn = eqn ? eqn "\n" $0 : $0; next
+}
+
+/^##$/ {
+	close_tags()
+	category_reference()
+	next
+}
+
+/^#/ {
+	close_tags()
+	sub(/^# */, "")
+	print "<br><hr>"; print
+	next
+}
+
 # register blanklines
 /^$/ { blankline = 1; close_tags(); next }
+
+function escape(s) {
+	gsub("\&", "\\\\&", s)
+	return s
+}
+
+# embedded eqn
+/\$\$[^\$]*\$\$/ {
+	while (match($0, /\$\$[^\$]*\$\$/)) {
+		eqn = substr($0, RSTART, RLENGTH)
+		gsub(/\$\$/, "", eqn)
+		# the last gsub() is very important, alt is used in sub() below
+		alt = eqn; gsub(/"/, "\\&quot;", alt); gsub(/&/, "\\\\&", alt);
+		gsub(/\[/, "\\&#91;", alt); gsub(/\]/, "\\&#93;", alt); 
+
+		eqn = unescape(eqn)
+		image = eqn_gen_image(eqn)
+		sub(/\$\$[^\$]*\$\$/, "<img alt=\"" escape(alt) "\" src=\"" image "\">")
+	}
+}
 
 #[http://url.com|some name]
 /\[/ {
@@ -120,19 +172,6 @@ pagename_re || /(https?|ftp|gopher|mailto|news):/ || /\[/ {
 /''/  { gsub(/''('?[^'])*''/, "<em>&</em>"); gsub(/''/, "") }
 /``/  { gsub(/``(`?[^`])*```*/, "<code>&</code>"); gsub(/``/, "") }
 
-# embedded eqn
-/\$\$[^\$]*\$\$/ {
-	while (match($0, /\$\$[^\$]*\$\$/)) {
-		eqn = substr($0, RSTART, RLENGTH)
-		gsub(/\$\$/, "", eqn)
-		# the last gsub() is very important, alt is used in sub() below
-		alt = eqn; gsub(/"/, "\\&quot;", alt); gsub(/&/, "\\\\&", alt)
-
-		eqn = unescape(eqn)
-		image = eqn_gen_image(eqn)
-		sub(/\$\$[^\$]*\$\$/, "<img alt=\"" alt "\" src=\"" image "\">")
-	}
-}
 
 # headings
 /^-[^-]/ { $0 = "<h2>" substr($0, 2) "</h2>"; close_tags(); print; next }
@@ -173,38 +212,6 @@ pagename_re || /(https?|ftp|gopher|mailto|news):/ || /\[/ {
 		print
 	}
 	next
-}
-
-/^##$/ {
-	close_tags()
-	category_reference()
-	next
-}
-
-/^#/ {
-	close_tags()
-	sub(/^# */, "")
-	print "<br><hr>"; print
-	next
-}
-
-/^%EQ$/, /^%EN$/ {
-	if (/^%EQ$/) {
-		eqn = ""; next
-	}
-
-	if (/^%EN$/) {
-		alt = eqn; gsub(/"/, "\\&quot;", alt)
-
-		eqn = unescape(eqn)
-		image = eqn_gen_image(eqn)
-		if (blankline == 1) {
-			print "<p>"; blankline = 0
-		}
-		print "<img style=\"margin-left:2em;\" alt=\"" alt "\" src=\"" image "\">"; next
-	}
-
-	eqn = eqn ? eqn "\n" $0 : $0; next
 }
 
 NR == 1 { print "<p>" }
