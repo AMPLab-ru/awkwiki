@@ -24,7 +24,31 @@ BEGIN {
 }
 
 # HTML entities for <, > and &
-/[&<>]/ { gsub(/&/, "\\&amp;");	gsub(/</, "\\&lt;"); gsub(/>/, "\\&gt;") }
+/[&<>]/ {
+	#skip already escaped stuff
+	split($0, sa, "");
+	for (i = 1; i < length(sa); i++) {
+		if (sa[i] != "&")
+			continue
+
+		tmp = substr($0, i);
+
+		if (match(tmp, /^&[a-z]+;/))
+			continue
+		if (match(tmp, /^&#[0-9]+;/))
+			continue
+		sa[i] = "&amp;"
+	}
+
+	tmp = ""
+	for (i = 1; i < length(sa); i++) {
+		tmp = tmp sa[i]
+	}
+	$0 = tmp
+	
+	gsub(/</, "\\&lt;");
+	gsub(/>/, "\\&gt;")
+}
 
 /^%NF$/ {
 	print "\n<div class=\"mw-highlight\">"
@@ -48,14 +72,14 @@ in_nf == 1 {print $0; next}
 	}
 
 	if (/^%EN$/) {
-		alt = eqn; gsub(/"/, "\\&quot;", alt)
+		alt = eqn;
 
 		eqn = unescape(eqn)
 		image = eqn_gen_image(eqn)
 		if (blankline == 1) {
 			print "<p>"; blankline = 0
 		}
-		print "<img style=\"margin-left:2em;\" alt=\"" alt "\" src=\"" image "\">"; next
+		print "<img style=\"margin-left:2em;\" alt=\"" html_escape(alt) "\" src=\"" image "\">"; next
 	}
 
 	eqn = eqn ? eqn "\n" $0 : $0; next
@@ -77,24 +101,16 @@ in_nf == 1 {print $0; next}
 # register blanklines
 /^$/ { blankline = 1; close_tags(); next }
 
-function escape(s) {
-	gsub(/\\/, "\\\\", s)
-	gsub(/&/, "\\\\&", s)
-	return s
-}
-
 # embedded eqn
 /\$\$[^\$]*\$\$/ {
 	while (match($0, /\$\$[^\$]*\$\$/)) {
 		eqn = substr($0, RSTART, RLENGTH)
 		gsub(/\$\$/, "", eqn)
 		# the last gsub() is very important, alt is used in sub() below
-		alt = eqn; gsub(/"/, "\\&quot;", alt); gsub(/&/, "\\\\&", alt);
-		gsub(/\[/, "\\&#91;", alt); gsub(/\]/, "\\&#93;", alt); 
-
+		alt = eqn;
 		eqn = unescape(eqn)
 		image = eqn_gen_image(eqn)
-		sub(/\$\$[^\$]*\$\$/, "<img alt=\"" escape(alt) "\" src=\"" image "\">")
+		sub(/\$\$[^\$]*\$\$/, "<img alt=\"" html_escape(alt) "\" src=\"" image "\">")
 	}
 }
 
@@ -245,6 +261,18 @@ function eqn_gen_image(s,	cmd, image)
 function unescape(s)
 {
 	gsub(/&amp;/, "\\&", s); gsub(/&lt;/, "<", s); gsub(/&gt;/, ">", s)
+	return s
+}
+
+function html_escape(s) {
+	gsub(/"/, "\\&quot;", s);
+	gsub(/&/, "\\\\&", s);
+	gsub(/\[/, "\\&#91;", s);
+	gsub(/\]/, "\\&#93;", s);
+
+	gsub(/\\/, "\\\\", s);
+	gsub(/&/, "\\\\&", s);
+
 	return s
 }
 

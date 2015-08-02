@@ -106,6 +106,9 @@ function print_ref(a,	i, str, out, tmp) {
 	#Cleanup fmt string
 	gsub(/%[A-Z]+/, "", out)
 
+	#html encode
+	gsub(/\[/, "\\&#91;", out); gsub(/\]/, "\\&#93;", out);
+
 	printf("%s\n", out)
 }
 
