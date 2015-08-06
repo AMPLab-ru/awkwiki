@@ -66,6 +66,7 @@ BEGIN {
 			sa[i - 1] = ""
 			sa[i] = "&#91;"
 		}
+		in_escape = 0
 	}
 	tmp = ""
 	for (i = 1; i <= length(sa); i++) {
