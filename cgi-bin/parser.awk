@@ -27,7 +27,7 @@ BEGIN {
 /[&<>]/ {
 	#skip already escaped stuff
 	split($0, sa, "");
-	for (i = 1; i < length(sa); i++) {
+	for (i = 1; i <= length(sa); i++) {
 		if (sa[i] != "&")
 			continue
 
@@ -41,13 +41,37 @@ BEGIN {
 	}
 
 	tmp = ""
-	for (i = 1; i < length(sa); i++) {
+	for (i = 1; i <= length(sa); i++) {
 		tmp = tmp sa[i]
 	}
 	$0 = tmp
 	
 	gsub(/</, "\\&lt;");
 	gsub(/>/, "\\&gt;")
+}
+
+#escape stuff
+/[\\]/ {
+	split($0, sa, "");
+	in_escape = 0
+	for (i = 1; i <= length(sa); i++) {
+		if (sa[i] == "\\") {
+			in_escape = 1
+			continue
+		}
+		if (in_escape == 0)
+			continue
+		#escape it!
+		if (sa[i] == "[") {
+			sa[i - 1] = ""
+			sa[i] = "&#91;"
+		}
+	}
+	tmp = ""
+	for (i = 1; i <= length(sa); i++) {
+		tmp = tmp sa[i]
+	}
+	$0 = tmp
 }
 
 /^%NF$/ {
@@ -83,19 +107,6 @@ in_nf == 1 {print $0; next}
 	}
 
 	eqn = eqn ? eqn "\n" $0 : $0; next
-}
-
-/^##$/ {
-	close_tags()
-	category_reference()
-	next
-}
-
-/^#/ {
-	close_tags()
-	sub(/^# */, "")
-	print "<br><hr>"; print
-	next
 }
 
 # register blanklines
@@ -183,6 +194,18 @@ pagename_re || /(https?|ftp|gopher|mailto|news):/ || /\[/ {
 # remove six single quotes (Wiki''''''Links)
 { gsub(/''''''/, "") }
 
+/^##$/ {
+	close_tags()
+	category_reference()
+	next
+}
+
+/^#/ {
+	close_tags()
+	sub(/^# */, "")
+	print "<br><hr>"; print
+	next
+}
 
 # emphasize text in single-quotes 
 /'''/ { gsub(/'''('?'?[^'])*'''/, "<strong>&</strong>"); gsub(/'''/, "") }
