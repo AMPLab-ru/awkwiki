@@ -145,7 +145,7 @@ in_nf == 1 {print $0; next}
 		if (n > 1)
 			name = a[2]
 
-		atag = sprintf("<a href=\"%s\"> %s </a> ", link, name)
+		atag = sprintf("<a href=\"%s\">%s</a>", link, name)
 		$0 = pref atag suf
 	}
 }
