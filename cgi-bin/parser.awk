@@ -50,31 +50,6 @@ BEGIN {
 	gsub(/>/, "\\&gt;")
 }
 
-#escape stuff
-/[\\]/ {
-	split($0, sa, "");
-	in_escape = 0
-	for (i = 1; i <= length(sa); i++) {
-		if (sa[i] == "\\") {
-			in_escape = 1
-			continue
-		}
-		if (in_escape == 0)
-			continue
-		#escape it!
-		if (sa[i] == "[") {
-			sa[i - 1] = ""
-			sa[i] = "&#91;"
-		}
-		in_escape = 0
-	}
-	tmp = ""
-	for (i = 1; i <= length(sa); i++) {
-		tmp = tmp sa[i]
-	}
-	$0 = tmp
-}
-
 /^%NF$/ {
 	print "\n<div class=\"mw-highlight\">"
 	print "<pre>";
@@ -110,6 +85,7 @@ in_nf == 1 {print $0; next}
 	eqn = eqn ? eqn "\n" $0 : $0; next
 }
 
+
 # register blanklines
 /^$/ { blankline = 1; close_tags(); next }
 
@@ -126,6 +102,31 @@ in_nf == 1 {print $0; next}
 	}
 }
 
+#escape stuff
+/[\\]/ {
+	split($0, sa, "");
+	in_escape = 0
+	for (i = 1; i <= length(sa); i++) {
+		if (sa[i] == "\\") {
+			in_escape = 1
+			continue
+		}
+		if (in_escape == 0)
+			continue
+		#escape it!
+		if (sa[i] == "[") {
+			sa[i - 1] = ""
+			sa[i] = "&#91;"
+		}
+		in_escape = 0
+	}
+	tmp = ""
+	for (i = 1; i <= length(sa); i++) {
+		tmp = tmp sa[i]
+	}
+	$0 = tmp
+}
+
 #[http://url.com|some name]
 /\[/ {
 	while (match($0, /\[[^\[\]]+\]/)) {
@@ -138,7 +139,7 @@ in_nf == 1 {print $0; next}
 		n = split(ref, a, "|")
 
 		name = link = a[1]
-		if (link !~ /^((https?|ftp|gopher):\/\/|(mailto|news):)/ &&
+		if (link !~ /^((https?|ftp|gopher|file):\/\/|(mailto|news):)/ &&
 		    link !~ pagename_re)
 			link = "http://" link
 
