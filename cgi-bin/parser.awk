@@ -127,6 +127,23 @@ in_nf == 1 {print $0; next}
 	$0 = tmp
 }
 
+function shape_link_image(link,		options)
+{
+	if (link !~ /https?:\/\/[^\t]*\.(jpg|jpeg|gif|png)/ \
+	    || link ~ /https?:\/\/[^\t]*\.(jpg|jpeg|gif|png)''''''/) {
+		print "match"
+		return ""
+	}
+
+	options = ""
+	for (item in img_options)
+		options = options sprintf("%s=\"%s\" ", item, img_options[item])
+
+	link = sprintf("<img %ssrc=\"%s\">", options, link)
+	return link
+
+}
+
 #[http://url.com|some name]
 /\[/ {
 	while (match($0, /\[[^\[\]]+\]/)) {
@@ -146,8 +163,21 @@ in_nf == 1 {print $0; next}
 		if (n > 1)
 			name = a[2]
 
-		atag = sprintf("<a href=\"%s\">%s</a>", link, name)
-		$0 = pref atag suf
+		if (n > 2)
+			img_options["width"] = a[3]
+
+		ret = shape_link_image(link)
+
+		delete img_options
+
+		#Its image!
+		if (ret != "") {
+			$0 = pref ret suf
+		} else {
+		#other case
+			atag = sprintf("<a href=\"%s\">%s</a>", link, name)
+			$0 = pref atag suf
+		}
 	}
 }
 
@@ -171,7 +201,10 @@ pagename_re || /(https?|ftp|gopher|mailto|news):/ || /\[/ {
 		# generate HTML img tag for .jpg,.jpeg,.gif,png URLs
 		} else if (field ~ /https?:\/\/[^\t]*\.(jpg|jpeg|gif|png)/ \
 			&& field !~ /https?:\/\/[^\t]*\.(jpg|jpeg|gif|png)''''''/) {
-			sub(/https?:\/\/[^\t]*\.(jpg|jpeg|gif|png)/, "<img src=\"&\">", field)
+
+			#skip already generated images
+			if (field !~ /src="/)
+				sub(/https?:\/\/[^\t]*\.(jpg|jpeg|gif|png)/, "<img src=\"&\">", field)
 		# links for mailto, news and http, ftp and gopher URLs
 		} else if (field ~ /((https?|ftp|gopher):\/\/|(mailto|news):)[^\t]*/) {
 			sub(/((https?|ftp|gopher):\/\/|(mailto|news):)[^\t]*[^.,?;:'")\t]/, "<a href=\"&\">&</a>", field)
