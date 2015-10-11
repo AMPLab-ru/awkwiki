@@ -131,7 +131,6 @@ function shape_link_image(link,		options)
 {
 	if (link !~ /https?:\/\/[^\t]*\.(jpg|jpeg|gif|png)/ \
 	    || link ~ /https?:\/\/[^\t]*\.(jpg|jpeg|gif|png)''''''/) {
-		print "match"
 		return ""
 	}
 
