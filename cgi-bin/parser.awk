@@ -6,7 +6,6 @@
 # Copyright (c) 2002 Oliver Tonnhofer (olt@bogosoft.com)
 # See the file `COPYING' for copyright notice.
 ################################################################################
-
 BEGIN {
 	pagename_re = "[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*"
 	list["maxlvl"] = 0
@@ -50,18 +49,19 @@ BEGIN {
 	gsub(/>/, "\\&gt;")
 }
 
-/^%NF$/ {
-	print "\n<div class=\"mw-highlight\">"
-	print "<pre>";
-	in_nf = 1;
-	next 
-}
+/^===$/ {
+	if (in_nf == 0) {
+		in_nf = 1;
+		print "\n<div class=\"mw-highlight\">"
+		print "<pre>";
+		next 
+	} else {
+		print "</div>"
+		print "</pre>";
+		in_nf = 0;
+		next
+	}
 
-/^%NE$/ {
-	print "</div>"
-	print "</pre>";
-	in_nf = 0;
-	next
 }
 
 in_nf == 1 {print $0; next}
@@ -102,31 +102,6 @@ in_nf == 1 {print $0; next}
 	}
 }
 
-#escape stuff
-/[\\]/ {
-	split($0, sa, "");
-	in_escape = 0
-	for (i = 1; i <= length(sa); i++) {
-		if (sa[i] == "\\") {
-			in_escape = 1
-			continue
-		}
-		if (in_escape == 0)
-			continue
-		#escape it!
-		if (sa[i] == "[") {
-			sa[i - 1] = ""
-			sa[i] = "&#91;"
-		}
-		in_escape = 0
-	}
-	tmp = ""
-	for (i = 1; i <= length(sa); i++) {
-		tmp = tmp sa[i]
-	}
-	$0 = tmp
-}
-
 function shape_link_image(link,		options)
 {
 	if (link !~ /https?:\/\/[^\t]*\.(jpg|jpeg|gif|png)/ \
@@ -143,13 +118,13 @@ function shape_link_image(link,		options)
 
 }
 
-#[http://url.com|some name]
-/\[/ {
-	while (match($0, /\[[^\[\]]+\]/)) {
+#[[http://url.com|some name]]
+/\[\[/ {
+	while (match($0, /\[\[[^\[\]]+\]\]/)) {
 
 		#strip square brackets
 		pref = substr($0, 1, RSTART - 1)
-		ref = substr($0, RSTART + 1, RLENGTH - 2)
+		ref = substr($0, RSTART + 2, RLENGTH - 4)
 		suf = substr($0, RSTART + RLENGTH)
 
 		n = split(ref, a, "|")
