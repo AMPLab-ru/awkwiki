@@ -3,7 +3,7 @@
 BEGIN {
 	join_expr = ", "
 
-	fmt_pref = "\t1 "
+	fmt_pref = "\n\t<li>"
 	fmt_site_name = "%s [Электронный ресурс] : "
 	fmt_authors = "%F %T / %A"
 	fmt_q_author = "%T / %Q"
@@ -11,6 +11,7 @@ BEGIN {
 	fmt_phys_eng = " — %P p."
 	fmt_phys_single = " — %P с."
 	fmt_phys_collection = " — C. %P"
+	fmt_suf = "\n\t</li>"
 
 	fmt_url = " — %U"
 }
@@ -77,6 +78,15 @@ function fmt_issuer_section(a,	res) {
 	return res
 }
 
+function fmt_url_section(a,	res) {
+	if ("%U" in a) {
+		res = gen_href(a["%U"], substr(a["%U"], 1, 50))
+		res = " — " res
+	}
+
+	return res
+}
+
 function print_ref(a,	i, str, out, tmp) {
 	if (arrlen(a) == 0) {
 		print ""
@@ -101,7 +111,8 @@ function print_ref(a,	i, str, out, tmp) {
 			     fmt_string(a, fmt_book)) \
 	    add_ending_dot(fmt_issuer_section(a)) \
 	    add_ending_dot(fmt_string(a, fmt_phys_info)) \
-	    add_ending_dot(fmt_string(a, fmt_url))
+	    add_ending_dot(fmt_url_section(a)) \
+	    fmt_suf
 
 	#Cleanup fmt string
 	gsub(/%[A-Z]+/, "", out)
@@ -141,10 +152,12 @@ function join_authors(s) {
 
 /^%R\(/ {
 	delete ref_entry
+	print "<ol>"
 
 	while(getline > 0) {
 		if (/^%R\)/) {
 			print_ref(ref_entry)
+			print "</ol>"
 			next
 		} else if (/^$/){
 			print_ref(ref_entry)
@@ -169,6 +182,3 @@ function join_authors(s) {
 	}
 }
 
-{
-	print $0
-}

@@ -51,9 +51,9 @@ BEGIN {
 
 /^===$/ {
 	if (in_nf == 0) {
-		in_nf = 1;
 		print "\n<div class=\"mw-highlight\">"
 		print "<pre>";
+		in_nf = 1;
 		next 
 	} else {
 		print "</div>"
@@ -61,46 +61,14 @@ BEGIN {
 		in_nf = 0;
 		next
 	}
-
 }
 
 in_nf == 1 {print $0; next}
 
-/^%EQ$/, /^%EN$/ {
-	if (/^%EQ$/) {
-		eqn = ""; next
-	}
-
-	if (/^%EN$/) {
-		alt = eqn;
-
-		eqn = unescape(eqn)
-		image = eqn_gen_image(eqn)
-		if (blankline == 1) {
-			print "<p>"; blankline = 0
-		}
-		print "<img style=\"margin-left:2em;\" alt=\"" html_escape(alt) "\" src=\"" image "\">"; next
-	}
-
-	eqn = eqn ? eqn "\n" $0 : $0; next
-}
-
+@include "./plugins.awk"
 
 # register blanklines
 /^$/ { blankline = 1; close_tags(); next }
-
-# embedded eqn
-/\$\$[^\$]*\$\$/ {
-	while (match($0, /\$\$[^\$]*\$\$/)) {
-		eqn = substr($0, RSTART, RLENGTH)
-		gsub(/\$\$/, "", eqn)
-		# the last gsub() is very important, alt is used in sub() below
-		alt = eqn;
-		eqn = unescape(eqn)
-		image = eqn_gen_image(eqn)
-		sub(/\$\$[^\$]*\$\$/, "<img alt=\"" html_escape(alt) "\" src=\"" image "\">")
-	}
-}
 
 function shape_link_image(link,		options)
 {
@@ -149,7 +117,7 @@ function shape_link_image(link,		options)
 			$0 = pref ret suf
 		} else {
 		#other case
-			atag = sprintf("<a href=\"%s\">%s</a>", link, name)
+			atag = gen_href(link, name)
 			$0 = pref atag suf
 		}
 	}
@@ -201,7 +169,7 @@ pagename_re || /(https?|ftp|gopher|mailto|news):/ || /\[/ {
 }
 
 # remove six single quotes (Wiki''''''Links)
-{ gsub(/''''''/, "") }
+{ $0 = wiki_quote_escape_6($0) }
 
 /^##$/ {
 	close_tags()
@@ -217,8 +185,8 @@ pagename_re || /(https?|ftp|gopher|mailto|news):/ || /\[/ {
 }
 
 # emphasize text in single-quotes 
-/'''/ { gsub(/'''('?'?[^'])*'''/, "<strong>&</strong>"); gsub(/'''/, "") }
-/''/  { gsub(/''('?[^'])*''/, "<em>&</em>"); gsub(/''/, "") }
+/'''/ { $0 = wiki_quote_escape_3($0) }
+/''/  { $0 = wiki_quote_escape_2($0) }
 /``/  { gsub(/``(`?[^`])*```*/, "<code>&</code>"); gsub(/``/, "") }
 
 
@@ -281,13 +249,38 @@ END {
 	close_tags()
 }
 
-function eqn_gen_image(s,	cmd, image)
+function wiki_quote_escape_6(s)
 {
-	sub(/^[ \t]*/, "", s); sub(/[ \t]*$/, "", s)
+	gsub(/''''''/, "", s)
+	return s;
+}
 
-	cmd = "./eqn_render.sh '" s "'"
-	cmd | getline image; close(cmd)
-	return image
+function wiki_quote_escape_2(s)
+{
+	gsub(/''('?[^'])*''/, "<em>&</em>", s); gsub(/''/, "", s)
+	return s;
+}
+
+function wiki_quote_escape_3(s)
+{
+	gsub(/'''('?'?[^'])*'''/, "<strong>&</strong>", s); gsub(/'''/, "", s);
+	return s;
+}
+
+function wiki_quote_escape(s)
+{
+	s = wiki_quote_escape_2( \
+	    wiki_quote_escape_3( \
+	    wiki_quote_escape_6(s)))
+	return s
+}
+
+function gen_href(link, text)
+{
+	s = sprintf("<a href=\"%s\">%s</a>",
+	    html_escape(link),
+	    html_escape(text))
+	return s
 }
 
 function unescape(s)
@@ -391,4 +384,3 @@ function parse_list(this, other,	n, i)
 
 	return
 }
-

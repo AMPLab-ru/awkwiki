@@ -38,7 +38,7 @@ BEGIN {
 	# date_cmd: Command for current date.
 	localconf["date_cmd"] = "date '+%e %b. %G %R:%S %Z'"
 	# rcs: If true, rcs is used for revisioning.
-	localconf["rcs"] = 0
+	localconf["rcs"] = 1
 	# path: add path to PATH environment
 	localconf["path"] = ""
 	# sessions directory
@@ -298,9 +298,9 @@ function parse(name, filename, revision,	parser_cmd)
 	if (system("[ -f "filename" ]") == 0 ) {
 		if (revision) {
 			print "<em>" _("Displaying old version") " ("revision") " _("of") " <a href=\""scriptname"/" name "\">"name"</a>.</em>"
-			system("co -q -p'"revision"' " filename " | ./refer.awk | " parser_cmd)
+			system("co -q -p'"revision"' " filename " | " parser_cmd)
 		} else
-			system("./refer.awk " filename " | " parser_cmd)
+			system("cat " filename " | " parser_cmd)
 	}
 }
 
