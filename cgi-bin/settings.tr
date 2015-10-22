@@ -3,6 +3,7 @@
 .ss 24 0
 .
 .special S SS
+.char \[filldot] \h'2p'.\h'2p'
 .char \[ldots] \&.\h'1p'.\h'1p'.
 .char \[vdots] \h'\w`.`u'\Z'\v`+3p`.'\Z'.'\Z'\v`-3p`.'\h'\w`.`u'
 .char \[cdots] \&.\h'1p'.\h'1p'.

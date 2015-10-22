@@ -78,9 +78,14 @@ function fmt_issuer_section(a,	res) {
 	return res
 }
 
-function fmt_url_section(a,	res) {
+function fmt_url_section(a,	res, url) {
 	if ("%U" in a) {
-		res = gen_href(a["%U"], substr(a["%U"], 1, 50))
+		url = a["%U"]
+		if (length(url) > 20) {
+			url = substr(a["%U"], 1, 20) "..."
+		}
+
+		res = gen_href(a["%U"], url)
 		res = " — " res
 	}
 
