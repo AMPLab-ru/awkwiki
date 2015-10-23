@@ -35,16 +35,12 @@ trap 'rm -f $SUM.ps $SUM.epsi $ERRFILE' EXIT INT
 
 if [ -f "$IMAGE" ]; then
 	touch $IMAGE;
-	echo "$IMAGE already generated" > /tmp/zaza
 	webeqn=`grep "$IMAGE" "$HINTFILE" | awk 'END{print $2}'`
-	echo $webeqn >> /tmp/zaza
 
 	test -n "$webeqn" && echo ${IMAGE#$ROOT} && \
 		echo "$webeqn" && \
 		exit 0;
 fi
-
-echo $IMAGE >> /tmp/zaza
 
 printf "%s" "$EQN" | iconv -futf8 -tkoi8r settings.tr - | groff -e -Tps > $SUM.ps 2>"$ERRFILE" && \
 #cat "$ERRFILE" |grep -v "^webeqn:" >&2 && \
