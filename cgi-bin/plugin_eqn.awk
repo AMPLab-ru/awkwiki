@@ -26,7 +26,14 @@
 		alt = eqn;
 		eqn = unescape(eqn)
 		image = eqn_gen_image(eqn)
-		sub(/\$\$[^\$]*\$\$/, "<img alt=\"" html_escape(alt) "\" src=\"" image "\">")
+
+		if (length(hint_sz) == 0)
+			hint_sz = "0"
+
+		img = sprintf("<img alt=\"%s\" src=\"%s\" " \
+			      "style=\"vertical-align:%spx\">", html_escape(alt), image, hint_sz)
+
+		sub(/\$\$[^\$]*\$\$/, img)
 	}
 }
 
@@ -35,7 +42,10 @@ function eqn_gen_image(s,	cmd, image)
 	sub(/^[ \t]*/, "", s); sub(/[ \t]*$/, "", s)
 
 	cmd = "./eqn_render.sh '" s "'"
-	cmd | getline image; close(cmd)
+	cmd | getline image;
+	cmd | getline hint_sz;
+	close(cmd);
+	#printf("awk offset is %s image is '%s'\n", hint_sz, image)
 	return image
 }
 

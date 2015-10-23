@@ -8,19 +8,53 @@ GSOPTS="-dEPSCrop -r100 -sDEVICE=pngalpha -dGraphicsAlphaBits=4"
 
 #EQN=".EQ\nP sub n,m ( cos theta )\n.EN"
 EQN=$(echo "$1" | sed 's/[ ][ ]*/ /g')
-EQN=".EQ\n$EQN\n.EN"
+EQN="
+.ps 14p
+.vs 16p
+.ss 24 0
+.special S SS
+.EQ
+$EQN
+.EN
+.nr !w \\w'\\*(10'
+.nr !c \\n[rsb]/720
+.nr !y \\n[rsb]+(\\n(!c*720)
+.if \\n(!y<350 \\
+.	nr !c -1
+.nr !z (\\n[rst]-\\n[rsb])/1000
+.tm webeqn: rsb=\\n(!c
+"
 
-SUM=$(echo $EQN | sha1sum | cut -d ' ' -f 1)
+SUM=$(printf "%s" "$EQN" | sha1sum | cut -d ' ' -f 1)
 IMAGE=$DSTD/$SUM.png
+ERRFILE="/tmp/error"
+HINTFILE="$DSTD/hints.txt"
 
-trap 'rm -f $SUM.ps $SUM.epsi' EXIT INT
 
-test -f $IMAGE && { touch $IMAGE; echo ${IMAGE#$ROOT}; exit 0; }
+trap 'rm -f $SUM.ps $SUM.epsi $ERRFILE' EXIT INT
 
-echo "$EQN" | iconv -futf8 -tkoi8r settings.tr - | groff -e -Tps > $SUM.ps && \
+if [ -f "$IMAGE" ]; then
+	touch $IMAGE;
+	echo "$IMAGE already generated" > /tmp/zaza
+	webeqn=`grep "$IMAGE" "$HINTFILE" | awk 'END{print $2}'`
+	echo $webeqn >> /tmp/zaza
+
+	test -n "$webeqn" && echo ${IMAGE#$ROOT} && \
+		echo "$webeqn" && \
+		exit 0;
+fi
+
+echo $IMAGE >> /tmp/zaza
+
+printf "%s" "$EQN" | iconv -futf8 -tkoi8r settings.tr - | groff -e -Tps > $SUM.ps 2>"$ERRFILE" && \
+#cat "$ERRFILE" |grep -v "^webeqn:" >&2 && \
     ps2epsi $SUM.ps $SUM.epsi 2>/dev/null && \
     gs >/dev/null -dSAFER -dBATCH -dNOPAUSE $GSOPTS \
         -sOutputFile=$IMAGE $SUM.epsi
 
-test -f $IMAGE && echo ${IMAGE#$ROOT}
+webeqn=`cat "$ERRFILE" | sed -n '/webeqn: rsb=/{s/.*=\(.*\)/\1/;p}'`
+echo "WEBEQN = $webeqn, IMAGE = $IMAGE" >&2
+echo "$IMAGE $webeqn" >> "$HINTFILE"
+
+test -f $IMAGE && echo "${IMAGE#$ROOT}" && echo "$webeqn"
 
