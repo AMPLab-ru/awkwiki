@@ -1,0 +1,7 @@
+.nr !w \w'\*(10'
+.nr !c \n[rsb]/720
+.nr !y \n[rsb]+(\n(!c*720)
+.if \n(!y<350 \
+.	nr !c -1
+.nr !z (\n[rst]-\n[rsb])/1000
+.tm webeqn: rsb=\n(!c
