@@ -11,7 +11,12 @@
 		if (blankline == 1) {
 			print "<p>"; blankline = 0
 		}
-		print "<img style=\"margin-left:2em;\" alt=\"" html_escape(alt) "\" src=\"" image "\">"; next
+
+		if (align_property == "")
+			align_property = "0"
+
+		print sprintf("<img alt=\"%s\" src=\"%s\" " \
+			      "style=\"vertical-align:%spx\">", html_escape(alt), image, align_property)
 	}
 
 	eqn = eqn ? eqn "\n" $0 : $0; next
