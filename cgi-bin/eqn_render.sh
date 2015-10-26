@@ -15,30 +15,30 @@ $EQN
 
 SUM=$(printf "%s" "$EQN" | sha1sum | cut -d ' ' -f 1)
 IMAGE=$DSTD/$SUM.png
-ERRFILE="/tmp/error"
-ALIGNFILE="$DSTD/align_hints.txt"
+ERRFILE="/tmp/awki_groff_error"
+ALIGNFILE="${IMAGE}.sty"
 
-trap 'rm -f $SUM.ps $SUM.epsi $ERRFILE' EXIT INT
+trap 'rm -f $SUM.ps $SUM.eps $ERRFILE' EXIT INT
 
 if [ -f "$IMAGE" ]; then
 	touch $IMAGE;
-	webeqn=`grep "$IMAGE" "$ALIGNFILE" | awk 'END{print $2}'`
 
-	if [ -n "$webeqn" ] ;then
+	if [ -n "$ALIGNFILE" ] ;then
 		echo ${IMAGE#$ROOT}
-		echo "$webeqn"
+		#######
+		echo "`cat $ALIGNFILE`"
 		exit 0
 	fi
 fi
 
-printf "%s" "$EQN" | iconv -futf8 -tkoi8r settings.tr - get_baseline.tr | groff -e -Tps > $SUM.ps 2>"$ERRFILE" && \
-#cat "$ERRFILE" |grep -v "^webeqn:" >&2 && \
-    ps2epsi $SUM.ps $SUM.epsi 2>/dev/null && \
+printf "%s" "$EQN" | iconv -futf8 -tkoi8r settings.tr - get_baseline.tr | groff -e -Tps > $SUM.ps 2> "$ERRFILE" && \
+    (cat "$ERRFILE" |grep -v "^webeqn:" >&2; true) && \
+    ps2eps $SUM.ps 2>/dev/null && \
     gs >/dev/null -dSAFER -dBATCH -dNOPAUSE $GSOPTS \
-        -sOutputFile=$IMAGE $SUM.epsi
+        -sOutputFile=$IMAGE $SUM.eps
 
-eval `cat "$ERRFILE"  | awk '/^webeqn/{print $2}'`
-echo "$IMAGE $rsb" >> "$ALIGNFILE"
+eval `awk '/^webeqn/ { print $2 }' "$ERRFILE"`
+echo "$rsb" > "$ALIGNFILE"
 
 test -f $IMAGE && echo "${IMAGE#$ROOT}" && echo "$rsb"
 
