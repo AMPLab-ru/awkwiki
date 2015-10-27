@@ -30,11 +30,14 @@ if test -f "$IMAGE"; then
 	fi
 fi
 
-printf "%s" "$EQN" | iconv -futf8 -tkoi8r settings.tr - get_baseline.tr | groff -e -Tps > "$SUM.ps" 2> "$ERRFILE" && \
-    (cat "$ERRFILE" |grep -v "^webeqn:" >&2; true) && \
-    ps2eps "$SUM.ps" 2>/dev/null && \
-    gs >/dev/null -dSAFER -dBATCH -dNOPAUSE $GSOPTS \
-        -sOutputFile=$IMAGE $SUM.eps
+printf "%s" "$EQN" | \
+    iconv -futf8 -tkoi8r settings.tr - get_baseline.tr	| \
+    groff -e -Tps 2>&1 > "$SUM.ps" | \
+    tee "$ERRFILE" | \
+    awk '$0 !~ /^webeqn/'>&2 && \
+ps2eps "$SUM.ps" 2>/dev/null && \
+gs >/dev/null -dSAFER -dBATCH -dNOPAUSE $GSOPTS \
+    -sOutputFile=$IMAGE $SUM.eps
 
 eval `awk '/^webeqn/ { print $2 }' "$ERRFILE"`
 echo "$rsb" > "$ALIGNFILE"
