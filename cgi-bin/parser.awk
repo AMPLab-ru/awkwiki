@@ -65,7 +65,7 @@ BEGIN {
 
 in_nf == 1 {print $0; next}
 
-@include "./plugins.awk"
+@include "./marks.awk"
 
 # register blanklines
 /^$/ { blankline = 1; close_tags(); next }

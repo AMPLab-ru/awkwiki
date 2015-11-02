@@ -1,5 +1,8 @@
 #!/usr/bin/awk -f
 
+#Ссылка на гост, под который делается оформление
+#https://ru.wikisource.org/wiki/%D0%93%D0%9E%D0%A1%D0%A2_7.1%E2%80%942003
+
 BEGIN {
 	join_expr = ", "
 
@@ -8,9 +11,10 @@ BEGIN {
 	fmt_authors = "%F %T / %A"
 	fmt_q_author = "%T / %Q"
 	fmt_book = " // %B"
-	fmt_phys_eng = " — %P p."
-	fmt_phys_single = " — %P с."
-	fmt_phys_collection = " — C. %P"
+
+	fmt_phys_single = " — %P %page%"
+	fmt_phys_collection = " — %pages% %P"
+
 	fmt_suf = "\n\t</li>"
 
 	fmt_url = " — %U"
@@ -92,6 +96,23 @@ function fmt_url_section(a,	res, url) {
 	return res
 }
 
+function fmt_phys_section(a,    res, url) {
+	if (get_rec_lang(a) == "ENG") {
+		a["%page%"] = "p."
+		a["%pages%"] = "pp."
+	} else {
+		a["%page%"] = "c."
+		a["%pages%"] = "C."
+	}
+
+	if (a["%P"] ~ "—") #it's some papers collection
+		res = fmt_phys_collection
+	else
+		res = fmt_phys_single
+
+	return fmt_string(a, res)
+}	
+
 function print_ref(a,	i, str, out, tmp) {
 	if (arrlen(a) == 0) {
 		print ""
@@ -104,18 +125,11 @@ function print_ref(a,	i, str, out, tmp) {
 		out = out fmt_string(a, fmt_q_author)
 	else
 		out = out fmt_string(a, fmt_authors)
-
-	if (get_rec_lang(a) == "ENG")
-		fmt_phys_info = fmt_phys_eng
-	else if ("%B" in a) #it's some papers collection
-		fmt_phys_info = fmt_phys_collection
-	else
-		fmt_phys_info = fmt_phys_single
-
+	
 	out = add_ending_dot(out \
 			     fmt_string(a, fmt_book)) \
 	    add_ending_dot(fmt_issuer_section(a)) \
-	    add_ending_dot(fmt_string(a, fmt_phys_info)) \
+	    add_ending_dot(fmt_phys_section(a)) \
 	    add_ending_dot(fmt_url_section(a)) \
 	    fmt_suf
 
@@ -128,45 +142,45 @@ function print_ref(a,	i, str, out, tmp) {
 	printf("%s\n", out)
 }
 
-function parse_authors(s, is_header,	a, initials, surname) {
+function parse_authors(s, isheader,	a, initials, surname) {
 	split(s, a, " ")
 	surname = a[1]
 
 	for (i = 2; i <= length(a); i++) {
-		if (is_header && length(a[i]) > 2)
+		if (isheader && length(a[i]) > 2)
 			a[i] = substr(a[i], 1, 1) "."
 
 		initials = initials " " a[i]
 	}
 
-	if (is_header == 1)
+	if (isheader == 1)
 		return surname "," initials
 
 	return initials " " surname
 }
 
 function join_authors(s) {
-	if (ref_entry["%NA"] == 0) {
-		ref_entry["%A"] = parse_authors(s, 0)
-		ref_entry["%F"] = parse_authors(s, 1)
+	if (refentry["%NA"] == 0) {
+		refentry["%A"] = parse_authors(s, 0)
+		refentry["%F"] = parse_authors(s, 1)
 	} else {
-		ref_entry["%A"] = ref_entry["%A"] join_expr parse_authors(s, 0)
+		refentry["%A"] = refentry["%A"] join_expr parse_authors(s, 0)
 	}
-	ref_entry["%NA"] += 1
+	refentry["%NA"] += 1
 }
 
 /^%R\(/ {
-	delete ref_entry
+	delete refentry
 	print "<ol>"
 
 	while(getline > 0) {
 		if (/^%R\)/) {
-			print_ref(ref_entry)
+			print_ref(refentry)
 			print "</ol>"
 			next
 		} else if (/^$/){
-			print_ref(ref_entry)
-			delete ref_entry
+			print_ref(refentry)
+			delete refentry
 			continue
 		} else if (/^[^%]/ || /^$/) {
 			continue
@@ -183,7 +197,7 @@ function join_authors(s) {
 		if (tag == "%P")
 			sub("-", "—")
 
-		ref_entry[tag] = $0
+		refentry[tag] = $0
 	}
 }
 
