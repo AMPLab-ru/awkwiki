@@ -23,8 +23,10 @@ BEGIN {
 function fmt_string(a, s,	nsubs, tmp) {
 	nsubs = 0
 	for (i in a) {
-		#encode special char &
 		tmp = a[i]
+		if (tmp == "")
+			continue
+		#encode special char &
 		sub("&", "\\\\&", tmp)
 
 		nsubs += sub(i, tmp, s)
@@ -98,17 +100,19 @@ function fmt_url_section(a,	res, url) {
 
 function fmt_phys_section(a,    res, url) {
 	if (get_rec_lang(a) == "ENG") {
-		a["%page%"] = "p."
-		a["%pages%"] = "pp."
+		pageinfo["%page%"] = "p."
+		pageinfo["%pages%"] = "pp."
 	} else {
-		a["%page%"] = "c."
-		a["%pages%"] = "C."
+		pageinfo["%page%"] = "c."
+		pageinfo["%pages%"] = "C."
 	}
 
 	if (a["%P"] ~ "—") #it's some papers collection
 		res = fmt_phys_collection
 	else
 		res = fmt_phys_single
+
+	res = fmt_string(pageinfo, res)
 
 	return fmt_string(a, res)
 }	
@@ -150,11 +154,14 @@ function parse_authors(s, isheader,	a, initials, surname) {
 		if (isheader && length(a[i]) > 2)
 			a[i] = substr(a[i], 1, 1) "."
 
-		initials = initials " " a[i]
+		if (initials == "")
+			initials = a[i]
+		else
+			initials = initials " " a[i]
 	}
 
 	if (isheader == 1)
-		return surname "," initials
+		return surname ", " initials
 
 	return initials " " surname
 }
