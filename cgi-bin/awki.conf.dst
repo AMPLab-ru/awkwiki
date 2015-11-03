@@ -17,7 +17,6 @@
 wiki_name="Awki"
 
 ## Wiki root
-#wiki_root="/var/www/wiki.amplab.ru/"
 wiki_root="/var/www/awki"
 
 ## datadir:
