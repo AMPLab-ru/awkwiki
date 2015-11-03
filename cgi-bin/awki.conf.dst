@@ -14,11 +14,11 @@
 #default_page="FrontPage"
 
 ## Wiki name
-wiki_name="AM&PLab"
+wiki_name="Awki"
 
 ## Wiki root
 #wiki_root="/var/www/wiki.amplab.ru/"
-wiki_root="/var/www/wiki.amplab.ru"
+wiki_root="/var/www/awki"
 
 ## datadir:
 ## Directory for raw pagedata (must be writeable for the script).

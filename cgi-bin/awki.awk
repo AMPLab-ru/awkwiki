@@ -241,8 +241,6 @@ function header(page,	i, action, label)
     </div>\n\
     <div id=\"navigation\" class=\"repeat\">\n\
       <div id=\"utility_nav\">\n\
-        <a href=\"http://www.amplab.ru/\">AM&PLab</a> | \n\
-        <a href=\"http://www.amplab.ru/contacts.html\">Контакты</a>\n\
       </div>\n\
       <div id=\"primary_nav\">\n\
         <ul id=\"navibar\">\n\
