@@ -417,6 +417,9 @@ function save(page, text, comment, filename,   dtext, date, file, username)
 	file = localconf["sessions"] cookies["id"]
 	getline username <file
 	close(file)
+	if (username == "")
+		username = "anonymous"
+
 
 	if (localconf["rcs"]) {
 		localconf["date_cmd"] | getline date
