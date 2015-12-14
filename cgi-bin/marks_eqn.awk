@@ -16,7 +16,8 @@
 			align_property = "0"
 
 		print sprintf("<img alt=\"%s\" src=\"%s\" " \
-			      "style=\"vertical-align:%spx\">", html_escape(alt), image, align_property)
+			      "style=\"margin-left:2em; vertical-align:%spx\">",
+			      html_escape(alt), image, align_property)
 	}
 
 	eqn = eqn ? eqn "\n" $0 : $0; next
@@ -36,7 +37,8 @@
 			align_property = "0"
 
 		img = sprintf("<img alt=\"%s\" src=\"%s\" " \
-			      "style=\"vertical-align:%spx\">", html_escape(alt), image, align_property)
+			      "style=\"vertical-align:%spx\">", html_escape(alt),
+			      image, align_property)
 
 		sub(/\$\$[^\$]*\$\$/, img)
 	}
