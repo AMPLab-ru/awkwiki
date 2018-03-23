@@ -7,9 +7,11 @@ test -z "$1" -o -z "$2" && \
 
 hash=$(echo -n "$2" | sha1sum | cut -d ' ' -f 1) 
 
+
 while read line; do
     username=${line%:*}
     password=${line#*:}
+
     test "$username" = "$1" -a "$password" = "$hash" && exit 0
 done < "$passwd_path"
 

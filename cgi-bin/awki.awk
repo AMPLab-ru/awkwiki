@@ -130,6 +130,11 @@ BEGIN {
 		query["action"] = "login"
 	}
 
+	if (query["register"]) {
+		result = check_register(query["username"], query["password"], query["password0"])
+		query["action"] = "login"
+	}
+
 	#set_cookie("count", cookies["count"] ? cookies["count"] + 1 : 0, "", "/")
 	#set_cookie("user", "guest", "Tue, 15-Jan-2015 21:47:38 GMT", "/")
 	header(query["page"])
@@ -140,6 +145,8 @@ BEGIN {
 		save(query["page"], query["text"], query["string"], query["filename"])
 	else if (query["action"] == "login")
 		result == "ok" ? welcome(query["username"]) : login(result)
+	else if (query["action"] == "register")
+		register(result)
 	else if (query["action"] == "logout" && auth_access)
 		farewell(cookies["id"])
 	else if (query["page"] ~ _("PageList"))
@@ -212,16 +219,13 @@ function _(name)
 
 function header(page,	i, action, label)
 {
-	action = !auth_access ? "login" : "logout" 
-	label = !auth_access ? _("Login") : _("Logout")
-
 	for (i in cookies_header)
 		print "Set-Cookie: " i "=" cookies_header[i]["value"] \
 			(cookies_header[i]["expires"] ? "; expires=" cookies_header[i]["expires"] : "") \
 			(cookies_header[i]["path"] ? "; path=" cookies_header[i]["path"] : "") \
 			(cookies_header[i]["domain"] ? "; domain=" cookies_header[i]["domain"] : "")
  
-	print "Content-Type: text/html; charset=utf-8\n"
+	print "Content-Type: text/html; charset=utf-8\n\n"
 
 	print "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \
 		\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">"
@@ -271,8 +275,15 @@ function header(page,	i, action, label)
       </form>\n\
       <br/>\n\
       <h2>" _("User actions") "</h2>\n\
-      <ul id=\"username\">\n\
-        <li><a href=\""scriptname"?action=" action "\" id=\"login\" rel=\"nofollow\">" label "</a></li>\n\
+      <ul id=\"username\">"
+	if (!auth_access)
+		print "\
+        <li><a href=\""scriptname"?action=login \" id=\"login\" rel=\"nofollow\">" _("Login") "</a></li>\n\
+        <li><a href=\""scriptname"?action=register \" id=\"login\" rel=\"nofollow\">" _("Register") "</a></li>"
+	else
+		print "\
+        <li><a href=\""scriptname"?action=logout \" id=\"login\" rel=\"nofollow\">" _("Logout") "</a></li>"
+	print "\
       </ul>\n\
     </div>\n\
     <div id=\"content\">"
@@ -366,6 +377,63 @@ function check_login(username, password,	cmd, id)
 
 	if (system(localconf["login_cmd"] " " username " " password))
 		return _("Username or password is wrong") "."
+
+	cmd = "basename $(mktemp " localconf["sessions"] "XXXXXXXXXXXXX)"
+	cmd | getline id
+	close(cmd)
+
+	set_cookie("id", id, "", "/")
+	cookies["id"] = id
+	print username > localconf["sessions"] id
+
+	return "ok"
+}
+
+function register(msg)
+{
+	print "\
+<form action=\""scriptname"\" method=\"POST\" accept-charset=\"UTF-8\">\n\
+  <div id=\"login\">\n\
+    <table bordr=\"0\">\n\
+      <tr>\n\
+        <td>" _("Username") "</td>\n\
+        <td><input type=\"text\" name=\"username\" size=\"32\"></td>\n\
+      </tr>\n\
+      <tr>\n\
+        <td>" _("Password") "</td>\n\
+        <td><input type=\"password\" name=\"password\" size=\"32\"></td>\n\
+      </tr>\n\
+      <tr>\n\
+        <td>" _("Repeat password") "</td>\n\
+        <td><input type=\"password\" name=\"password0\" size=\"32\"></td>\n\
+      </tr>\n\
+      <tr>\n\
+        <td></td>\n\
+        <td><input type=\"submit\" name=\"register\" value=\"" _("Register") "\"></td>\n\
+      </tr>\n\
+    </table>\n\
+  </div>\n\
+</form>"
+	if (msg)
+		print msg
+}
+
+function check_register(username, password, password0,	cmd, id, hash)
+{
+	if (!username || !password)
+		return _("Username or password is empty") "."
+
+	if (system("grep " username " " localconf["passwd_path"]) == 0)
+		return _("This user already exists") "."
+
+	if (password != password0)
+		return _("Username or password is wrong") "."
+
+	cmd = "echo " password " | sha1sum | cut -d ' ' -f 1"
+	cmd | getline hash
+	close(cmd)
+
+	system("echo " username ":" hash " >> " localconf["passwd_path"])
 
 	cmd = "basename $(mktemp " localconf["sessions"] "XXXXXXXXXXXXX)"
 	cmd | getline id

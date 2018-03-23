@@ -5,7 +5,9 @@ RecentChanges:ПоследниеИзменения
 PageList:СписокСтраниц
 Username:Пользователь
 Password:Пароль
+Repeat password:Повторите пароль
 Login:Войти
+Register:Зарегистрироваться
 Logout:Выйти
 Search:Найти
 Save:Сохранить
@@ -26,3 +28,4 @@ you are logged out:вы вышли из системы
 Username or password is empty:Имя пользователя или пароль пустые
 Username or password is wrong:Имя пользователя или пароль неверны
 If you save previous versions, you'll overwrite the current page:Если вы сохраните предыдущую версию, то перезапишите тeкущую страницу
+This user already exists:Этот пользователь уже существует

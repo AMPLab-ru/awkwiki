@@ -18,7 +18,7 @@ IMAGE="$DSTD/$SUM.png"
 ERRFILE="/tmp/awki_groff_error"
 ALIGNFILE="${IMAGE}.sty"
 
-trap 'rm -f $SUM.ps $SUM.eps $ERRFILE' EXIT INT
+trap 'rm -f /tmp/$SUM.ps /tmp/$SUM.eps $ERRFILE' EXIT INT
 
 if test -f "$IMAGE"; then
 	touch "$IMAGE";
@@ -31,13 +31,13 @@ if test -f "$IMAGE"; then
 fi
 
 printf "%s" "$EQN" | \
-    iconv -futf8 -tkoi8r settings.tr - get_baseline.tr	| \
-    groff -e -Tps 2>&1 > "$SUM.ps" | \
+    iconv -futf8 -tkoi8r $ROOT/cgi-bin/settings.tr - $ROOT/cgi-bin/get_baseline.tr	| \
+    groff -e -Tps 2>&1 > "/tmp/$SUM.ps" | \
     tee "$ERRFILE" | \
     awk '$0 !~ /^webeqn/'>&2 && \
-ps2eps "$SUM.ps" 2>/dev/null && \
+ps2eps "/tmp/$SUM.ps" 2>/dev/null && \
 gs >/dev/null -dSAFER -dBATCH -dNOPAUSE $GSOPTS \
-    -sOutputFile=$IMAGE $SUM.eps
+    -sOutputFile=$IMAGE /tmp/$SUM.eps
 
 eval `awk '/^webeqn/ { print $2 }' "$ERRFILE"`
 echo "$rsb" > "$ALIGNFILE"

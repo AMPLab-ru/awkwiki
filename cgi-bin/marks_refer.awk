@@ -176,7 +176,7 @@ function join_authors(s) {
 	refentry["%NA"] += 1
 }
 
-/^%R\(/ {
+function ref_fmt() {
 	delete refentry
 	print "<ol>"
 

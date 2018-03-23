@@ -10,27 +10,314 @@ BEGIN {
 	pagename_re = "[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*"
 	list["maxlvl"] = 0
 	scriptname = ENVIRON["SCRIPT_NAME"]
-	FS = "[ ]"
 	
 	cmd = "ls " datadir
 	while (cmd | getline ls_out > 0)
 		if (match(ls_out, pagename_re) &&
-		    substr(ls_out, RSTART + RLENGTH) !~ /,v/) {
+				substr(ls_out, RSTART + RLENGTH) !~ /,v/) {
 			page = substr(ls_out, RSTART, RLENGTH)
 			pages[page] = 1
 		}
 	close(cmd)
 }
 
+@include "./marks_refer.awk"
+
+NR == 1 { print "<p>" }
+
+{
+	if (/^$/) {
+		blankline = 1
+		close_tags()
+		next
+	} else if (/^##$/) {
+		close_tags()
+		category_reference()
+		next
+	} else if (/^#/) {
+		close_tags()
+		sub(/^# */, "")
+
+		print "<br><hr>"; print
+		next
+	} else if (/^%R/) {
+		ref_fmt()
+	} else if (/^===$/) {
+		close_tags()
+		print "\n<div class=\"mw-highlight\">"
+		print "<pre>"
+
+		getline
+
+		while ($0 !~ /^===$/) {
+			$0 = html_ent_format($0)
+			print
+			getline
+		}
+
+		print "</div>"
+		print "</pre>"
+
+		next
+	} else if (/^ /) {
+		close_tags("pre")
+
+		if (pre != 1) {
+			print "<pre>"
+			pre = 1
+			blankline = 0
+		} else if (blankline == 1) {
+			print ""
+			blankline = 0
+		}
+
+		$0 = all_format($0)
+
+		print
+		next
+	} else if (/^----/) {
+		blankline = 1
+		close_tags()
+		print "<hr>"
+		next
+	} else if (/^-[^-]/) {
+		sub("^-", "")
+		$0 = "<h2>" $0 "</h2>"
+		close_tags()
+		print
+		next
+	} else if (/^--[^-]/) {
+		sub("^--", "")
+		$0 = "<h3>" $0 "</h3>"
+		close_tags()
+		print
+		next
+	} else if (/^---[^-]/) {
+		sub("^---", "")
+		$0 = "<h4>" $0 "</h4>"
+		close_tags()
+		print
+		next
+	} else if (/^\t+[*]/) {
+		close_tags("list")
+		$0 = all_format($0)
+		parse_list("ul", "ol")
+		print
+		next
+	} else if (/^\t+[1]/) {
+		close_tags("list")
+		$0 = all_format($0)
+		parse_list("ol", "ul")
+		print
+		next
+	} else if (/\t[^:][^:]*[ \t]+:[ \t]+.*$/) {
+		close_tags("dl")
+		sub(/^\t/, "")
+
+		term = $0
+		sub(/[ \t]+:.*$/, "", term)
+
+		def = $0
+		sub(/[^:][^:]*:[ \t]+/, "", def)
+
+		if (dl != 1) {
+			print "<dl>"; dl = 1
+		}
+
+		print "<dt>" term "</dt>"
+		print "\t<dd>" def "</dd>"
+		next
+	}
+
+	close_tags()
+
+	if (blankline == 1) {
+		print "<p>"
+		blankline = 0
+	}
+
+	$0 = all_format($0)
+
+	print
+}
+
+END {
+	$0 = ""
+	close_tags()
+}
+
+function all_format(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
+{
+	split(fmt, sa, "")
+	strong = em = code = 0
+	wikilink = !0
+	i = 1
+
+	while (i <= length(fmt)) {
+
+		pref = substr(fmt, 1, i - 1);
+		tmp = substr(fmt, i);
+
+		if (tmp ~ /^''''''/) {
+			sub(/^''''''/, "", tmp)
+
+			fmt = pref tmp
+
+			wikilink = !wikilink
+			split(fmt, sa, "")
+			continue
+		}
+		if (tmp ~ /^'''/) {
+			sub(/^'''/, "", tmp)
+
+			fmt = pref (strong ? "</strong>" : "<strong>") tmp
+			i += (strong ? length("</strong>") : length("<strong>"))
+
+			strong = !strong
+			split(fmt, sa, "")
+			continue
+		}
+		if (tmp ~ /^''/) {
+			sub(/^''/, "", tmp)
+
+			fmt = pref (em ? "</em>" : "<em>") tmp
+			i += (em ? length("</em>") : length("<em>"))
+
+			em = !em
+			split(fmt, sa, "")
+			continue
+		}
+		if (tmp ~ /^``/) {
+			sub(/^``/, "", tmp)
+
+			fmt = pref (code ? "</code>" : "<code>") tmp
+			i += (code ? length("</code>") : length("<code>"))
+
+			code = !code
+			split(fmt, sa, "")
+			continue
+		}
+		if (match(tmp, /^\$\$[^\$]*\$\$/)) {
+			suf = substr(tmp, RLENGTH + 1)
+			eqn = substr(tmp, 3, RLENGTH - 4)
+			alt = eqn
+
+			image = eqn_gen_image(eqn)
+
+			if (align_property == "")
+				align_property = "0"
+
+			img = sprintf("<img alt=\"%s\" src=\"%s\" " \
+				      "style=\"vertical-align:%spx\">",
+				      html_escape(alt), image, align_property)
+
+			fmt = pref img suf
+			split(fmt, sa, "")
+			i += length(img)
+			continue
+		}
+		if (match(tmp, /^\[\[[^\[\]]+\]\]/)) {
+			link = wiki_url_format(substr(tmp, RSTART, RLENGTH))
+			sub(/^\[\[[^\[\]]+\]\]/, "", tmp)
+
+			i += length(link)
+			fmt = pref link tmp
+			split(fmt, sa, "")
+			continue
+		}
+		if (match(tmp, /^https?:\/\/[^ \t]*\.(jpg|jpeg|gif|png)/)) {
+			link = substr(tmp, 1, RLENGTH)
+			sub(/^https?:\/\/[^ \t]*\.(jpg|jpeg|gif|png)/, "", tmp)
+
+			link = "<img src=\"" link "\">"
+
+			i += length(link)
+			fmt = pref link tmp
+			split(fmt, sa, "")
+			continue
+		}
+		if (match(tmp, /^((https?|ftp|gopher):\/\/|(mailto|news):)[^ \t]*/)) {
+			link = substr(tmp, 1, RLENGTH)
+			sub(/^((https?|ftp|gopher):\/\/|(mailto|news):)[^ \t]*/, "", tmp)
+
+			link = "<a href=\"" link "\">" link "</a>"
+			# remove mailto: in link description
+			sub(/>mailto:/, ">", link)
+
+			i += length(link)
+			fmt = pref link tmp
+			split(fmt, sa, "")
+			continue
+		}
+		if (match(tmp, "^" pagename_re)) {
+			if (wikilink) {
+				link = substr(tmp, 1, RLENGTH)
+				sub("^" pagename_re, "", tmp)
+
+				if (pages[link])
+					link = "<a href=\""scriptname"/"link"\">"link"</a>"
+				else
+					link = link"<a href=\""scriptname"/"link"\">?</a>"
+
+				i += length(link)
+				fmt = pref link tmp
+				split(fmt, sa, "")
+				continue
+			}
+			else {
+				i += RLENGTH
+				continue
+			}
+		}
+		if (match(tmp, /^&[a-z]+;/) || match(tmp, /^&#[0-9]+;/)) {
+			i += RLENGTH
+			continue
+		}
+		if (tmp ~ /^</) {
+			sub(/^</, "\\&lt;", tmp)
+			i += 4
+			fmt = pref tmp
+			split(fmt, sa, "")
+			continue
+		}
+		if (tmp ~ /^>/) {
+			sub(/^>/, "\\&gt;", tmp)
+			i += 4
+			fmt = pref tmp
+			split(fmt, sa, "")
+			continue
+		}
+		if (tmp ~ /^&/) {
+			sub(/^&/, "&amp;", tmp)
+			i += length("&amp;")
+			fmt = pref tmp
+			split(fmt, sa, "")
+			continue
+		}
+
+		i += 1
+	}
+
+	if (strong)
+		fmt = fmt "</strong>"
+	if (em)
+		fmt = fmt "</em>"
+	if (code)
+		fmt = fmt "</code>"
+
+	return fmt
+}
+
 # HTML entities for <, > and &
-/[&<>]/ {
+function html_ent_format(fmt,	sa, tmp)
+{
 	#skip already escaped stuff
-	split($0, sa, "");
+	split(fmt, sa, "");
 	for (i = 1; i <= length(sa); i++) {
 		if (sa[i] != "&")
 			continue
 
-		tmp = substr($0, i);
+		tmp = substr(fmt, i);
 
 		if (match(tmp, /^&[a-z]+;/))
 			continue
@@ -43,63 +330,33 @@ BEGIN {
 	for (i = 1; i <= length(sa); i++) {
 		tmp = tmp sa[i]
 	}
-	$0 = tmp
+	fmt = tmp
 	
-	gsub(/</, "\\&lt;");
-	gsub(/>/, "\\&gt;")
+	gsub(/</, "\\&lt;", fmt)
+	gsub(/>/, "\\&gt;", fmt)
+
+	return fmt
 }
 
-/^===$/ {
-	if (in_nf == 0) {
-		print "\n<div class=\"mw-highlight\">"
-		print "<pre>";
-		in_nf = 1;
-		next 
-	} else {
-		print "</div>"
-		print "</pre>";
-		in_nf = 0;
-		next
-	}
-}
-
-in_nf == 1 {print $0; next}
-
-@include "./marks.awk"
-
-# register blanklines
-/^$/ { blankline = 1; close_tags(); next }
-
-function shape_link_image(link,		options)
+function wiki_url_format(fmt,	pref, ref, suf, n, name, link, ret, atag)
 {
-	if (link !~ /https?:\/\/[^\t]*\.(jpg|jpeg|gif|png)/ \
-	    || link ~ /https?:\/\/[^\t]*\.(jpg|jpeg|gif|png)''''''/) {
-		return ""
-	}
-
-	options = ""
-	for (item in img_options)
-		options = options sprintf("%s=\"%s\" ", item, img_options[item])
-
-	link = sprintf("<img %ssrc=\"%s\">", options, link)
-	return link
-
-}
-
-#[[http://url.com|some name]]
-/\[\[/ {
-	while (match($0, /\[\[[^\[\]]+\]\]/)) {
-
+	if (match(fmt, /^\[\[[^\[\]]+\]\]$/)) {
 		#strip square brackets
-		pref = substr($0, 1, RSTART - 1)
-		ref = substr($0, RSTART + 2, RLENGTH - 4)
-		suf = substr($0, RSTART + RLENGTH)
+		ref = substr(fmt, 3, RLENGTH - 4)
 
 		n = split(ref, a, "|")
 
 		name = link = a[1]
-		if (link !~ /^((https?|ftp|gopher|file):\/\/|(mailto|news):)/ &&
-		    link !~ pagename_re)
+
+		if (link ~ pagename_re) {
+			if (pages[link])
+				return "<a href=\""scriptname"/"link"\">"link"</a>"
+			else
+				return link"<a href=\""scriptname"/"link"\">?</a>"
+			return link
+		}
+
+		if (link !~ /^((https?|ftp|gopher|file):\/\/|(mailto|news):)/)
 			link = "http://" link
 
 		if (n > 1)
@@ -114,165 +371,30 @@ function shape_link_image(link,		options)
 
 		#Its image!
 		if (ret != "") {
-			$0 = pref ret suf
+			fmt = pref ret
 		} else {
 		#other case
 			atag = gen_href(link, name)
-			$0 = pref atag suf
+			fmt = pref atag
 		}
 	}
+
+	return fmt
 }
 
-# generate links
-pagename_re || /(https?|ftp|gopher|mailto|news):/ || /\[/ {
-	tmpline = ""
-	for (i = 1; i <= NF; i++) {
-		field = $i 
-
-		#skip already generated links
-		if (field ~ /<a/) {
-			tmp = field
-			for (j = i + 1; j <= NF; j++) {
-				tmp = tmp " " $j
-				if ($j ~ "</a>") {
-					i = j
-					field = tmp
-					break
-				}
-			}
-		# generate HTML img tag for .jpg,.jpeg,.gif,png URLs
-		} else if (field ~ /https?:\/\/[^\t]*\.(jpg|jpeg|gif|png)/ \
-			&& field !~ /https?:\/\/[^\t]*\.(jpg|jpeg|gif|png)''''''/) {
-
-			#skip already generated images
-			if (field !~ /src="/)
-				sub(/https?:\/\/[^\t]*\.(jpg|jpeg|gif|png)/, "<img src=\"&\">", field)
-		# links for mailto, news and http, ftp and gopher URLs
-		} else if (field ~ /((https?|ftp|gopher):\/\/|(mailto|news):)[^\t]*/) {
-			sub(/((https?|ftp|gopher):\/\/|(mailto|news):)[^\t]*[^.,?;:'")\t]/, "<a href=\"&\">&</a>", field)
-			# remove mailto: in link description
-			sub(/>mailto:/, ">",field)
-		# links for awkipages
-#} else if (field ~ /(^|[[,.?;:'"\(\t])[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*/ && field !~ /''''''/) {
-		} else if (field ~ pagename_re && field !~ /''''''/) {
-			match(field, pagename_re)
-			tmp_pagename = substr(field, RSTART, RLENGTH)
-			if (pages[tmp_pagename])
-				sub(pagename_re, "<a href=\""scriptname"/&\">&</a>", field)
-			else
-				sub(pagename_re, "&<a href=\""scriptname"/&\">?</a>", field)
-		}
-		tmpline = tmpline field OFS
-	}
-	# return tmpline to $0 and remove last OFS (whitespace)
-	$0 = substr(tmpline, 1, length(tmpline) - 1)
-}
-
-# remove six single quotes (Wiki''''''Links)
-{ $0 = wiki_quote_escape_6($0) }
-
-/^##$/ {
-	close_tags()
-	category_reference()
-	next
-}
-
-/^#/ {
-	close_tags()
-	sub(/^# */, "")
-	print "<br><hr>"; print
-	next
-}
-
-# emphasize text in single-quotes 
-/'''/ { $0 = wiki_quote_escape_3($0) }
-/''/  { $0 = wiki_quote_escape_2($0) }
-/``/  { gsub(/``(`?[^`])*```*/, "<code>&</code>"); gsub(/``/, "") }
-
-
-# headings
-/^-[^-]/ { $0 = "<h2>" substr($0, 2) "</h2>"; close_tags(); print; next }
-/^--[^-]/ { $0 = "<h3>" substr($0, 3) "</h3>"; close_tags(); print; next }
-/^---[^-]/ { $0 = "<h4>" substr($0, 4) "</h4>"; close_tags(); print; next }
-
-# horizontal line
-/^----/ { sub(/^----+/, "<hr>"); blankline = 1; close_tags(); print; next }
-
-/^\t+[*]/ { close_tags("list"); parse_list("ul", "ol"); print; next }
-/^\t+[1]/ { close_tags("list"); parse_list("ol", "ul"); print; next }
-
-# definitions
-/\t[^:][^:]*[ \t]+:[ \t]+.*$/ {
-	close_tags("dl")
-	sub(/^\t/, "")
-	term = $0; sub(/[ \t]+:.*$/, "", term)
-	def = $0; sub(/[^:][^:]*:[ \t]+/, "", def)
-
-	if (dl != 1) {
-		print "<dl>"; dl = 1
-	}
-	
-	print "<dt>" term "</dt>" 
-	print "\t<dd>" def "</dd>" 
-	next
-}
-
-/^ / { 
-	close_tags("pre");
-	if (pre != 1) {
-		print "<pre>\n" $0; pre = 1
-		blankline = 0
-	} else { 
-		if (blankline == 1) {
-			print ""; blankline = 0
-		}
-		print
-	}
-	next
-}
-
-NR == 1 { print "<p>" }
-
+function shape_link_image(link,		options)
 {
-	close_tags()
-	
-	# print paragraph when blankline registered
-	if (blankline == 1) {
-		print "<p>"; blankline = 0
+	if (link !~ /https?:\/\/[^\t]*\.(jpg|jpeg|gif|png)/ \
+	    || link ~ /https?:\/\/[^\t]*\.(jpg|jpeg|gif|png)''''''/) {
+		return ""
 	}
 
-	print
-}
+	options = ""
+	for (item in img_options)
+		options = options sprintf("%s=\"%s\" ", item, img_options[item])
 
-END {
-	$0 = ""
-	close_tags()
-}
-
-function wiki_quote_escape_6(s)
-{
-	gsub(/''''''/, "", s)
-	return s;
-}
-
-function wiki_quote_escape_2(s)
-{
-	gsub(/''('?[^'])*''/, "<em>&</em>", s); gsub(/''/, "", s)
-	return s;
-}
-
-function wiki_quote_escape_3(s)
-{
-	gsub(/'''('?'?[^'])*'''/, "<strong>&</strong>", s); gsub(/'''/, "", s);
-	return s;
-}
-
-function wiki_quote_escape(s)
-{
-	s = wiki_quote_escape_2( \
-	    wiki_quote_escape_3( \
-	    wiki_quote_escape_6(s)))
-	return s
+	link = sprintf("<img %ssrc=\"%s\">", options, link)
+	return link
 }
 
 function gen_href(link, text)
@@ -280,12 +402,6 @@ function gen_href(link, text)
 	s = sprintf("<a href=\"%s\">%s</a>",
 	    html_escape(link),
 	    html_escape(text))
-	return s
-}
-
-function unescape(s)
-{
-	gsub(/&amp;/, "\\&", s); gsub(/&lt;/, "<", s); gsub(/&gt;/, ">", s)
 	return s
 }
 
@@ -384,3 +500,16 @@ function parse_list(this, other,	n, i)
 
 	return
 }
+
+function eqn_gen_image(s,	cmd, image)
+{
+	sub(/^[ \t]*/, "", s); sub(/[ \t]*$/, "", s)
+
+	cmd = "./eqn_render.sh '" s "'"
+	cmd | getline image;
+	cmd | getline align_property;
+	close(cmd);
+	#printf("awk offset is %s image is '%s'\n", align_property, image)
+	return image
+}
+
