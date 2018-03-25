@@ -27,6 +27,7 @@ You are logged in as:Вы зашли в систему как
 you are logged out:вы вышли из системы
 Username or password is empty:Имя пользователя или пароль пустые
 Username or password is wrong:Имя пользователя или пароль неверны
+Wrong characters at username or password:Имя пользователя или пароль содержат недопустимые символы
 If you save previous versions, you'll overwrite the current page:Если вы сохраните предыдущую версию, то перезапишите тeкущую страницу
 This user already exists:Этот пользователь уже существует
 Change password:Изменить пароль

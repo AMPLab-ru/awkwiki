@@ -383,6 +383,9 @@ function check_login(username, password,	cmd, id)
 	if (!username || !password)
 		return _("Username or password is empty") "."
 
+	if (!match(username, /^[a-zA-Z0-9_-]+$/) || !match(password, /^[^'":]+$/))
+		return _("Wrong characters at username or password")
+
 	if (system(localconf["login_cmd"] " " username " " password))
 		return _("Username or password is wrong") "."
 
@@ -456,13 +459,16 @@ function check_register(username, password, password0,	cmd, id, hash)
 	if (!username || !password)
 		return _("Username or password is empty") "."
 
-	if (system("grep " username " " localconf["passwd_path"]) == 0)
+	if (!match(username, /^[a-zA-Z0-9_-]+$/) || !match(password, /^[^'":]+$/))
+		return _("Wrong characters at username or password")
+
+	if (system("grep '" username "' " localconf["passwd_path"]) == 0)
 		return _("This user already exists") "."
 
 	if (password != password0)
 		return _("Username or password is wrong") "."
 
-	cmd = "echo " password " | sha1sum | cut -d ' ' -f 1"
+	cmd = "echo '" password "' | sha1sum | cut -d ' ' -f 1"
 	cmd | getline hash
 	close(cmd)
 
@@ -487,6 +493,8 @@ function check_change_password(password, password0,	cmd, username, hash, file, t
 	if (password != password0)
 		return _("Username or password is wrong") "."
 
+	if (!match(username, /^[a-zA-Z0-9_-]+$/) || !match(password, /^[^'":]+$/))
+		return _("Wrong characters at username or password")
 	cmd = "echo " password " | sha1sum | cut -d ' ' -f 1"
 	cmd | getline hash
 	close(cmd)

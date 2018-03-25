@@ -45,8 +45,9 @@ NR == 1 { print "<p>" }
 	} else if (/^===/) {
 		close_tags()
 
-		if (match($0, /{[^{}]}/)) {
+		if (match($0, /{[-A-Za-z0-9_]+}/)) {
 			langname = substr($0, RSTART + 1, RLENGTH - 2)
+			langname = tolower(langname)
 			getline
 
 			tmp = ""
