@@ -132,7 +132,12 @@ BEGIN {
 
 	if (query["register"]) {
 		result = check_register(query["username"], query["password"], query["password0"])
-		query["action"] = "login"
+		query["action"] = "register"
+	}
+
+	if (query["change_password"]) {
+		result = check_change_password(query["password"], query["password0"])
+		query["action"] = "change_password"
 	}
 
 	#set_cookie("count", cookies["count"] ? cookies["count"] + 1 : 0, "", "/")
@@ -147,6 +152,8 @@ BEGIN {
 		result == "ok" ? welcome(query["username"]) : login(result)
 	else if (query["action"] == "register")
 		register(result)
+	else if (query["action"] == "change_password")
+		change_password(result)
 	else if (query["action"] == "logout" && auth_access)
 		farewell(cookies["id"])
 	else if (query["page"] ~ _("PageList"))
@@ -282,6 +289,7 @@ function header(page,	i, action, label)
         <li><a href=\""scriptname"?action=register \" id=\"login\" rel=\"nofollow\">" _("Register") "</a></li>"
 	else
 		print "\
+        <li><a href=\""scriptname"?action=change_password \" id=\"login\" rel=\"nofollow\">" _("Change password") "</a></li>\n\
         <li><a href=\""scriptname"?action=logout \" id=\"login\" rel=\"nofollow\">" _("Logout") "</a></li>"
 	print "\
       </ul>\n\
@@ -393,7 +401,7 @@ function register(msg)
 {
 	print "\
 <form action=\""scriptname"\" method=\"POST\" accept-charset=\"UTF-8\">\n\
-  <div id=\"login\">\n\
+  <div id=\"register\">\n\
     <table bordr=\"0\">\n\
       <tr>\n\
         <td>" _("Username") "</td>\n\
@@ -410,6 +418,31 @@ function register(msg)
       <tr>\n\
         <td></td>\n\
         <td><input type=\"submit\" name=\"register\" value=\"" _("Register") "\"></td>\n\
+      </tr>\n\
+    </table>\n\
+  </div>\n\
+</form>"
+	if (msg)
+		print msg
+}
+
+function change_password(msg)
+{
+	print "\
+<form action=\""scriptname"\" method=\"POST\" accept-charset=\"UTF-8\">\n\
+  <div id=\"change_password\">\n\
+    <table bordr=\"0\">\n\
+      <tr>\n\
+        <td>" _("Password") "</td>\n\
+        <td><input type=\"password\" name=\"password\" size=\"32\"></td>\n\
+      </tr>\n\
+      <tr>\n\
+        <td>" _("Repeat password") "</td>\n\
+        <td><input type=\"password\" name=\"password0\" size=\"32\"></td>\n\
+      </tr>\n\
+      <tr>\n\
+        <td></td>\n\
+        <td><input type=\"submit\" name=\"change_password\" value=\"" _("Change password") "\"></td>\n\
       </tr>\n\
     </table>\n\
   </div>\n\
@@ -442,6 +475,37 @@ function check_register(username, password, password0,	cmd, id, hash)
 	set_cookie("id", id, "", "/")
 	cookies["id"] = id
 	print username > localconf["sessions"] id
+
+	return "ok"
+}
+
+function check_change_password(password, password0,	cmd, username, hash, file, tmp)
+{
+	if (!password)
+		return _("Username or password is empty") "."
+
+	if (password != password0)
+		return _("Username or password is wrong") "."
+
+	cmd = "echo " password " | sha1sum | cut -d ' ' -f 1"
+	cmd | getline hash
+	close(cmd)
+
+	cmd = "cat " localconf["sessions"] cookies["id"]
+	cmd | getline username
+	close(cmd)
+
+	file = ""
+	cmd = "grep -v '^" username "' " localconf["passwd_path"]
+
+	while (cmd | getline tmp > 0)
+		file = file "\n" tmp
+
+	close(cmd)
+
+	file = "\n" username ":" hash "\n"
+
+	print file > localconf["passwd_path"]
 
 	return "ok"
 }

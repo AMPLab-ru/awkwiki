@@ -347,3 +347,19 @@ a:hover,#primary_nav ul ul a
 .mw-highlight {
   background: #f8f8f8
 }
+
+#vimCodeElement { white-space: pre-wrap; font-family: monospace; color: #657b83; background-color: #fdf6e3; }
+* { font-size: 1em; }
+pre .LineNr { color: #93a1a1; background-color: #eee8d5; padding-top: 3px; padding-bottom: 3px; padding-left: 2px;}
+pre .Comment { color: #93a1a1; font-style: italic; }
+pre .Constant { color: #2aa198;  }
+pre .PreProc { color: #cb4b16;  }
+pre .Special { color: #dc322f;  }
+pre .Statement { color: #719e07;  }
+pre .Todo { white-space: pre-wrap; font-family: monospace; color: #657b83; background-color: #fdf6e3; }
+pre .Type { color: #b58900;  }
+
+pre .Error { color: #ffffff; background-color: #ff6060; padding-bottom: 1px;  }
+pre .Identifier { color: #00ffff; font-weight: bold;  }
+pre .Ignore { color: #000000;  }
+pre .Underlined { color: #5fd7ff; text-decoration: underline;  }

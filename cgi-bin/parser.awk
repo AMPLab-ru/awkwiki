@@ -42,21 +42,44 @@ NR == 1 { print "<p>" }
 		next
 	} else if (/^%R/) {
 		ref_fmt()
-	} else if (/^===$/) {
+	} else if (/^===/) {
 		close_tags()
-		print "\n<div class=\"mw-highlight\">"
-		print "<pre>"
 
-		getline
-
-		while ($0 !~ /^===$/) {
-			$0 = html_ent_format($0)
-			print
+		if (match($0, /{[^{}]}/)) {
+			langname = substr($0, RSTART + 1, RLENGTH - 2)
 			getline
-		}
 
-		print "</div>"
-		print "</pre>"
+			tmp = ""
+			while ($0 !~ /^===$/) {
+				tmp = tmp "\n" $0
+				getline
+			}
+
+			tmp = substr(tmp, 2)
+			print tmp > "tmpcode"
+			close("tmpcode")
+
+			cmd = "./highlight/highlight_code.sh tmpcode " langname
+
+			while (cmd | getline out)
+				print out
+
+			close(cmd)
+		} else {
+			print "\n<div class=\"mw-highlight\">"
+			print "<pre>"
+
+			getline
+
+			while ($0 !~ /^===$/) {
+				$0 = html_ent_format($0)
+				print
+				getline
+			}
+
+			print "</div>"
+			print "</pre>"
+		}
 
 		next
 	} else if (/^ /) {
@@ -512,4 +535,5 @@ function eqn_gen_image(s,	cmd, image)
 	#printf("awk offset is %s image is '%s'\n", align_property, image)
 	return image
 }
+
 
