@@ -52,6 +52,10 @@ NR == 1 { print "<p>" }
 			tmp = tmp "\n" $0
 			getline
 		}
+		if (blankline) {
+			blankline = 0
+			print "<p>"
+		}
 		print eqn_gen_image(tmp)
 		next
 	} else if (/^===/) {
