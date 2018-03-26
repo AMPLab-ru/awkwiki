@@ -32,5 +32,9 @@ trap 'rm -f $tmpname' EXIT INT
 script --return -c "$vim -X -E -n -S \"$vimrc\" +\":set ft=$ftyp\" +\":TOhtml\" +\":w! $tmpname\" +\":qall!\" $src" /dev/null >/dev/null 2>&1
 
 #cat "$tmpname"
-cat "$tmpname" | awk "/^<pre id=.vimCodeElement./,/^<\/pre>/"
+cat "$tmpname" | awk '
+/^<pre>/ {
+	$0 = "<pre id=\"vimCodeElement\">"
+}
+/^<pre id=.vimCodeElement./,/^<\/pre>/'
 

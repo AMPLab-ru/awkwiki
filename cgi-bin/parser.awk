@@ -6,6 +6,9 @@
 # Copyright (c) 2002 Oliver Tonnhofer (olt@bogosoft.com)
 # See the file `COPYING' for copyright notice.
 ################################################################################
+
+@include "lib.awk"
+
 BEGIN {
 	pagename_re = "[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*"
 	list["maxlvl"] = 0
@@ -57,15 +60,15 @@ NR == 1 { print "<p>" }
 			}
 
 			tmp = substr(tmp, 2)
-			print tmp > "tmpcode"
-			close("tmpcode")
+			fname = mktemp("")
+			print tmp > fname
+			close(fname)
 
-			cmd = "./highlight/highlight_code.sh tmpcode " langname
-
+			cmd = "./highlight/highlight_code.sh " fname " " langname
 			while (cmd | getline out)
 				print out
-
 			close(cmd)
+			rmfile(fname)
 		} else {
 			print "\n<div class=\"mw-highlight\">"
 			print "<pre>"
