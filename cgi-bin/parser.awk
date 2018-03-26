@@ -45,6 +45,15 @@ NR == 1 { print "<p>" }
 		next
 	} else if (/^%R/) {
 		ref_fmt()
+	} else if (/^%EQ$/) {
+		tmp = ""
+		getline
+		while ($0 !~ /^%EN$/) {
+			tmp = tmp "\n" $0
+			getline
+		}
+		print eqn_gen_image(tmp)
+		next
 	} else if (/^===/) {
 		close_tags()
 
@@ -64,7 +73,7 @@ NR == 1 { print "<p>" }
 			print tmp > fname
 			close(fname)
 
-			cmd = "./highlight/highlight_code.sh " fname " " langname
+			cmd = "./highlight/highlighter.py " fname " " langname
 			while (cmd | getline out)
 				print out
 			close(cmd)
@@ -227,16 +236,8 @@ function all_format(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
 		if (match(tmp, /^\$\$[^\$]*\$\$/)) {
 			suf = substr(tmp, RLENGTH + 1)
 			eqn = substr(tmp, 3, RLENGTH - 4)
-			alt = eqn
 
-			image = eqn_gen_image(eqn)
-
-			if (align_property == "")
-				align_property = "0"
-
-			img = sprintf("<img alt=\"%s\" src=\"%s\" " \
-				      "style=\"vertical-align:%spx\">",
-				      html_escape(alt), image, align_property)
+			img = eqn_gen_image(eqn)
 
 			fmt = pref img suf
 			split(fmt, sa, "")
@@ -528,16 +529,22 @@ function parse_list(this, other,	n, i)
 	return
 }
 
-function eqn_gen_image(s,	cmd, image)
+function eqn_gen_image(eqn,	cmd, image, alt, align_property)
 {
+	alt = eqn
 	sub(/^[ \t]*/, "", s); sub(/[ \t]*$/, "", s)
 
-	cmd = "./eqn_render.sh '" s "'"
+	cmd = "./eqn_render.sh '" eqn "'"
 	cmd | getline image;
 	cmd | getline align_property;
 	close(cmd);
 	#printf("awk offset is %s image is '%s'\n", align_property, image)
-	return image
-}
+	if (align_property == "")
+		align_property = "0"
 
+	img = sprintf("<img alt=\"%s\" src=\"%s\" " \
+		      "style=\"vertical-align:%spx\">",
+		      html_escape(alt), image, align_property)
+	return img
+}
 
