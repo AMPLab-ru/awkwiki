@@ -27,8 +27,8 @@ BEGIN {
 	# max_post: Bytes accept by POST requests (to avoid DOS).
 	localconf["max_post"] = 2000000
 	# write_protection: Regex for write protected files
-	# e.g.: "*", "PageOne|PageTwo|^.*NonEditable" 
-	# HINT: to edit these protected pages, upload a .htaccess 
+	# e.g.: "*", "PageOne|PageTwo|^.*NonEditable"
+	# HINT: to edit these protected pages, upload a .htaccess
 	#       protected awki.cgi script with write_protection = ""
 	localconf["write_protection"] = ""
 	# css: HTTP URL for external CSS file.
@@ -47,7 +47,7 @@ BEGIN {
 	pagename_re = "[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*"
 
 	scriptname = ENVIRON["SCRIPT_NAME"]
-	
+
 	if (localconf["path"])
 		ENVIRON["PATH"] = localconf["path"] ":" ENVIRON["PATH"]
 
@@ -57,13 +57,13 @@ BEGIN {
 	load_dict(dictionary, localconf["lang"])
 
 	localconf["default_page"] = _("FrontPage")
-		
+
 	# PATH_INFO contains page name
 	if (ENVIRON["PATH_INFO"])
 		query["page"] = ENVIRON["PATH_INFO"]
 
 	parse_cookies(cookies)
-	
+
 	if (ENVIRON["REQUEST_METHOD"] == "POST") {
 		if (ENVIRON["CONTENT_TYPE"] == "application/x-www-form-urlencoded") {
 			if (ENVIRON["CONTENT_LENGTH"] < localconf["max_post"])
@@ -75,10 +75,10 @@ BEGIN {
 			cmd | getline query_str
 			close (cmd)
 		}
-		if (ENVIRON["QUERY_STRING"]) 
+		if (ENVIRON["QUERY_STRING"])
 			query_str = query_str "&" ENVIRON["QUERY_STRING"]
 	} else {
-		if (ENVIRON["QUERY_STRING"])	
+		if (ENVIRON["QUERY_STRING"])
 			query_str = ENVIRON["QUERY_STRING"]
 	}
 
@@ -93,7 +93,7 @@ BEGIN {
 	query["revision"] = clear_revision(query["revision"])
 	query["revision2"] = clear_revision(query["revision2"])
 	query["string"] = clear_str(decode(query["string"]))
-	
+
 	if (!localconf["rcs"])
 		query["revision"] = 0
 
@@ -101,7 +101,7 @@ BEGIN {
 		query["page"] = localconf["default_page"]
 
 	query["filename"] = localconf["datadir"] query["page"]
-	
+
 	#check if page is editable
 	special_pages = _("FullSearch") "|" _("PageList") "|" _("RecentChanges")
 
@@ -115,9 +115,9 @@ BEGIN {
 			}
 		} else {
 			delete cookies["id"]
-		}	
+		}
 	}
-	
+
 	if (query["page"] ~ "("special_pages")") {
 		special_page = 1
 	} else if (auth_access || !localconf["write_protection"] ||
@@ -170,7 +170,7 @@ BEGIN {
 		parse(query["page"], query["filename"], query["revision"])
 
 	footer(query["page"])
-	
+
 }
 
 function set_cookie(name, value, expires, path, domain)
@@ -231,7 +231,7 @@ function header(page,	i, action, label)
 			(cookies_header[i]["expires"] ? "; expires=" cookies_header[i]["expires"] : "") \
 			(cookies_header[i]["path"] ? "; path=" cookies_header[i]["path"] : "") \
 			(cookies_header[i]["domain"] ? "; domain=" cookies_header[i]["domain"] : "")
- 
+
 	print "Content-Type: text/html; charset=utf-8\n\n"
 
 	print "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \

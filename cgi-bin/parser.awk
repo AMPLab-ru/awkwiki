@@ -69,7 +69,8 @@ NR == 1 { print "<p>" }
 			tmp = ""
 			while ($0 !~ /^===$/) {
 				tmp = tmp "\n" $0
-				getline
+				if (getline <= 0)
+					break
 			}
 
 			tmp = substr(tmp, 2)
@@ -91,7 +92,8 @@ NR == 1 { print "<p>" }
 			while ($0 !~ /^===$/) {
 				$0 = html_ent_format($0)
 				print
-				getline
+				if (getline <= 0)
+					break
 			}
 
 			print "</div>"
