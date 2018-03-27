@@ -308,7 +308,7 @@ a:hover,#primary_nav ul ul a
   color:#444;
 }
 
-#login table {
+#login, #register, #change_password table {
   width: auto;
   margin: 20px 0 30px;
   color: #444;
@@ -316,11 +316,11 @@ a:hover,#primary_nav ul ul a
   border-spacing: 0;
 }
 
-#login tbody {
+#login, #register, #change_password tbody {
   display: table-row-group;
 }
 
-#login td {
+#login, #register, #change_password td {
   padding: 0px 5px;
   border-bottom: 1px dotted #999;
   vertical-align: top;

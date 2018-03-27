@@ -13,7 +13,7 @@ BEGIN {
 	pagename_re = "[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*"
 	list["maxlvl"] = 0
 	scriptname = ENVIRON["SCRIPT_NAME"]
-	
+
 	cmd = "ls " datadir
 	while (cmd | getline ls_out > 0)
 		if (match(ls_out, pagename_re) &&

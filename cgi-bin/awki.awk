@@ -468,7 +468,7 @@ function check_register(username, password, password0,	cmd, id, hash)
 	if (password != password0)
 		return _("Username or password is wrong") "."
 
-	cmd = "echo '" password "' | sha1sum | cut -d ' ' -f 1"
+	cmd = "echo -n '" password "' | sha1sum | cut -d ' ' -f 1"
 	cmd | getline hash
 	close(cmd)
 
@@ -493,9 +493,10 @@ function check_change_password(password, password0,	cmd, username, hash, file, t
 	if (password != password0)
 		return _("Username or password is wrong") "."
 
-	if (!match(username, /^[a-zA-Z0-9_-]+$/) || !match(password, /^[^'":]+$/))
+	if (!match(password, /^[^'":]+$/))
 		return _("Wrong characters at username or password")
-	cmd = "echo " password " | sha1sum | cut -d ' ' -f 1"
+
+	cmd = "echo -n " password " | sha1sum | cut -d ' ' -f 1"
 	cmd | getline hash
 	close(cmd)
 
