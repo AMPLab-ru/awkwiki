@@ -44,12 +44,18 @@ NR == 1 { print "<p>" }
 		print "<br><hr>"
 		split($0, sa, "|")
 
-		$0 = ""
+		tmp = ""
 
-		for (i = 1; i <= arrlen(sa); i++)
-			$0 = $0 " | " page_ref_format($0)
+		for (i = 1; i <= arrlen(sa); i++) {
+			sub(/^ */, "", sa[i])
+			sub(/ *$/, "", sa[i])
+			if (sa[i] ~ pagename_re)
+				tmp = tmp " | " page_ref_format(sa[i])
+			else
+				tmp = tmp " | " sa[i]
+		}
 
-		$0 = substr($0, 4)
+		$0 = substr(tmp, 4)
 		print
 		next
 	} else if (/^%R/) {
