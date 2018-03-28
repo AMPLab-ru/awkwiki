@@ -47,15 +47,17 @@ NR == 1 { print "<p>" }
 		ref_fmt()
 	} else if (/^%EQ$/) {
 		tmp = ""
-		getline
-		while ($0 !~ /^%EN$/) {
+
+		while (getline > 0 && $0 !~ /^%EN$/)
 			tmp = tmp "\n" $0
-			getline
-		}
+
+		tmp = substr(tmp, 2)
+
 		if (blankline) {
 			blankline = 0
 			print "<p>"
 		}
+
 		print eqn_gen_image(tmp)
 		next
 	} else if (/^===/) {
@@ -64,14 +66,11 @@ NR == 1 { print "<p>" }
 		if (match($0, /{[-A-Za-z0-9_]+}/)) {
 			langname = substr($0, RSTART + 1, RLENGTH - 2)
 			langname = tolower(langname)
-			getline
 
 			tmp = ""
-			while ($0 !~ /^===$/) {
+
+			while (getline > 0 && $0 !~ /^===$/)
 				tmp = tmp "\n" $0
-				if (getline <= 0)
-					break
-			}
 
 			tmp = substr(tmp, 2)
 			fname = mktemp("")
@@ -87,13 +86,9 @@ NR == 1 { print "<p>" }
 			print "\n<div class=\"mw-highlight\">"
 			print "<pre>"
 
-			getline
-
-			while ($0 !~ /^===$/) {
+			while (getline > 0 && $0 !~ /^===$/) {
 				$0 = html_ent_format($0)
 				print
-				if (getline <= 0)
-					break
 			}
 
 			print "</div>"
