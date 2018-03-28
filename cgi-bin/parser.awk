@@ -41,7 +41,8 @@ NR == 1 { print "<p>" }
 		close_tags()
 		sub(/^# */, "")
 
-		print "<br><hr>"; print
+		print "<br><hr>"; print page_ref_format($0)
+
 		next
 	} else if (/^%R/) {
 		ref_fmt()
@@ -283,10 +284,7 @@ function all_format(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
 				link = substr(tmp, 1, RLENGTH)
 				sub("^" pagename_re, "", tmp)
 
-				if (pages[link])
-					link = "<a href=\""scriptname"/"link"\">"link"</a>"
-				else
-					link = link"<a href=\""scriptname"/"link"\">?</a>"
+				link = page_ref_format(link)
 
 				i += length(link)
 				fmt = pref link tmp
@@ -335,6 +333,14 @@ function all_format(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
 		fmt = fmt "</code>"
 
 	return fmt
+}
+
+function page_ref_format(link)
+{
+	if (pages[link])
+		return "<a href=\""scriptname"/"link"\">"link"</a>"
+	else
+		return link"<a href=\""scriptname"/"link"\">?</a>"
 }
 
 # HTML entities for <, > and &
