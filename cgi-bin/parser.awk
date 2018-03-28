@@ -41,8 +41,16 @@ NR == 1 { print "<p>" }
 		close_tags()
 		sub(/^# */, "")
 
-		print "<br><hr>"; print page_ref_format($0)
+		print "<br><hr>"
+		split($0, sa, "|")
 
+		$0 = ""
+
+		for (i = 1; i <= arrlen(sa); i++)
+			$0 = $0 " | " page_ref_format($0)
+
+		$0 = substr($0, 4)
+		print
 		next
 	} else if (/^%R/) {
 		ref_fmt()
