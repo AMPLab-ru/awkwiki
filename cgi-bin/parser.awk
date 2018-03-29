@@ -397,19 +397,18 @@ function wiki_url_format(fmt,	pref, ref, suf, n, name, link, ret, atag)
 
 		name = link = a[1]
 
+		if (n > 1)
+			name = a[2]
+
 		if (link ~ pagename_re) {
 			if (pages[link])
-				return "<a href=\""scriptname"/"link"\">"link"</a>"
+				return "<a href=\""scriptname"/"link"\">"name"</a>"
 			else
-				return link"<a href=\""scriptname"/"link"\">?</a>"
-			return link
+				return name"<a href=\""scriptname"/"link"\">?</a>"
 		}
 
 		if (link !~ /^((https?|ftp|gopher|file):\/\/|(mailto|news):)/)
 			link = "http://" link
-
-		if (n > 1)
-			name = a[2]
 
 		if (n > 2)
 			img_options["width"] = a[3]
