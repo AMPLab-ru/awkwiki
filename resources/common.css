@@ -249,11 +249,12 @@ ul,ol
 }
 
 #content pre {
-  white-space: pre-wrap;       /* css-3 */
-  white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
-  white-space: -pre-wrap;      /* Opera 4-6 */
-  white-space: -o-pre-wrap;    /* Opera 7 */
+  white-space: pre;       /* css-3 */
+  white-space: -moz-pre;  /* Mozilla, since 1999 */
+  white-space: -pre;      /* Opera 4-6 */
+  white-space: -o-pre;    /* Opera 7 */
   word-wrap: break-word;       /* Internet Explorer 5.5+ */
+  overflow: auto;
 }
 
 #primary_nav ul
@@ -344,10 +345,16 @@ a:hover,#primary_nav ul ul a
   color: #a00;
 }
 
-.mw-highlight {
-  background: #f8f8f8
-}
+.mw-highlight { background: #f8f8f8 }
+.highlighttable { background: #f9f9f9 }
+td.code { width: 98% }
+td.linenos { width: 2% }
 
+.highlight-container {
+  overflow: auto;
+  width: 100%;
+  max-width: 100%;
+}
 
 .highlight .hll { background-color: #ffffcc }
 .highlight  { background: #f8f8f8; }

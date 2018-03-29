@@ -37,6 +37,8 @@ def main():
 
     formatter = HtmlFormatter(linenos=True, cssclass="highlight")
     result = highlight(code, lexer, formatter)
+    result = "<div class=\"highlight-container\">\n" + result + \
+      "\n</div>\n"
     print result
 
     return 0
