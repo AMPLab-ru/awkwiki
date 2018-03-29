@@ -346,10 +346,13 @@ a:hover,#primary_nav ul ul a
 }
 
 .mw-highlight { background: #f8f8f8 }
-.highlighttable { background: #f9f9f9 }
 td.code { width: 98% }
 td.linenos { width: 2% }
 
+.highlighttable {
+  background: #f9f9f9;
+  width: 100%;
+}
 .highlight-container {
   overflow: auto;
   width: 100%;
