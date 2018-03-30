@@ -134,18 +134,21 @@ NR == 1 { print "<p>" }
 		next
 	} else if (/^-[^-]/) {
 		sub("^-", "")
+		$0 = all_format($0)
 		$0 = "<h2>" $0 "</h2>"
 		close_tags()
 		print
 		next
 	} else if (/^--[^-]/) {
 		sub("^--", "")
+		$0 = all_format($0)
 		$0 = "<h3>" $0 "</h3>"
 		close_tags()
 		print
 		next
 	} else if (/^---[^-]/) {
 		sub("^---", "")
+		$0 = all_format($0)
 		$0 = "<h4>" $0 "</h4>"
 		close_tags()
 		print
