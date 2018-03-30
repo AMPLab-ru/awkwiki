@@ -41,22 +41,7 @@ NR == 1 { print "<p>" }
 		close_tags()
 		sub(/^# */, "")
 
-		print "<br><hr>"
-		split($0, sa, "|")
-
-		tmp = ""
-
-		for (i = 1; i <= arrlen(sa); i++) {
-			sub(/^ */, "", sa[i])
-			sub(/ *$/, "", sa[i])
-			if (sa[i] ~ pagename_re)
-				tmp = tmp " | " page_ref_format(sa[i])
-			else
-				tmp = tmp " | " sa[i]
-		}
-
-		$0 = substr(tmp, 4)
-		print
+		category_format()
 		next
 	} else if (/^%R/) {
 		ref_fmt()
@@ -78,37 +63,10 @@ NR == 1 { print "<p>" }
 	} else if (/^===/) {
 		close_tags()
 
-		if (match($0, /{[-A-Za-z0-9_]+}/)) {
-			langname = substr($0, RSTART + 1, RLENGTH - 2)
-			langname = tolower(langname)
-
-			tmp = ""
-
-			while (getline > 0 && $0 !~ /^===$/)
-				tmp = tmp "\n" $0
-
-			tmp = substr(tmp, 2)
-			fname = mktemp("")
-			print tmp > fname
-			close(fname)
-
-			cmd = "./highlight/highlighter.py " fname " " langname
-			while (cmd | getline out)
-				print out
-			close(cmd)
-			rmfile(fname)
-		} else {
-			print "\n<div class=\"mw-highlight\">"
-			print "<pre>"
-
-			while (getline > 0 && $0 !~ /^===$/) {
-				$0 = html_ent_format($0)
-				print
-			}
-
-			print "</div>"
-			print "</pre>"
-		}
+		if (match($0, /{[-A-Za-z0-9_]+}/))
+			code_highlight()
+		else
+			non_format()
 
 		next
 	} else if (/^ /) {
@@ -127,31 +85,8 @@ NR == 1 { print "<p>" }
 
 		print
 		next
-	} else if (/^----/) {
-		blankline = 1
-		close_tags()
-		print "<hr>"
-		next
-	} else if (/^-[^-]/) {
-		sub("^-", "")
-		$0 = all_format($0)
-		$0 = "<h2>" $0 "</h2>"
-		close_tags()
-		print
-		next
-	} else if (/^--[^-]/) {
-		sub("^--", "")
-		$0 = all_format($0)
-		$0 = "<h3>" $0 "</h3>"
-		close_tags()
-		print
-		next
-	} else if (/^---[^-]/) {
-		sub("^---", "")
-		$0 = all_format($0)
-		$0 = "<h4>" $0 "</h4>"
-		close_tags()
-		print
+	} else if (/^-/) {
+		heading_format()
 		next
 	} else if (/^\t+[*]/) {
 		close_tags("list")
@@ -569,5 +504,90 @@ function eqn_gen_image(eqn,	cmd, image, alt, align_property)
 		      "style=\"vertical-align:%spx\">",
 		      html_escape(alt), image, align_property)
 	return img
+}
+
+# For code highlighting in
+# ==={langname}
+# ===
+function code_highlight()
+{
+	langname = substr($0, RSTART + 1, RLENGTH - 2)
+	langname = tolower(langname)
+
+	tmp = ""
+
+	while (getline > 0 && $0 !~ /^===$/)
+		tmp = tmp "\n" $0
+
+	tmp = substr(tmp, 2)
+	fname = mktemp("")
+	print tmp > fname
+	close(fname)
+
+	cmd = "./highlight/highlighter.py " fname " " langname
+	while (cmd | getline out)
+		print out
+	close(cmd)
+	rmfile(fname)
+}
+
+# For unformated data in:
+# ===
+# ===
+function non_format()
+{
+	print "\n<div class=\"mw-highlight\">"
+	print "<pre>"
+
+	while (getline > 0 && $0 !~ /^===$/) {
+		$0 = html_ent_format($0)
+		print
+	}
+
+	print "</div>"
+	print "</pre>"
+}
+
+function category_format(	tmp)
+{
+	print "<br><hr>"
+	split($0, sa, "|")
+
+	tmp = ""
+
+	for (i = 1; i <= arrlen(sa); i++) {
+		sub(/^ */, "", sa[i])
+		sub(/ *$/, "", sa[i])
+		if (sa[i] ~ pagename_re)
+			tmp = tmp " | " page_ref_format(sa[i])
+		else
+			tmp = tmp " | " sa[i]
+	}
+
+	$0 = substr(tmp, 4)
+	print
+}
+
+# For headings and horizontal line
+function heading_format(	n)
+{
+	close_tags()
+
+	while (/^-/) {
+		sub(/^-/, "")
+		n++
+	}
+
+	if (n >= 4) {
+		blankline = 1
+		print "<hr>"
+		return
+	}
+
+	n += 1
+
+	$0 = all_format($0)
+	$0 = "<h" n ">" $0 "</h" n ">"
+	print
 }
 
