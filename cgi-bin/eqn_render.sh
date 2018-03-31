@@ -14,7 +14,7 @@ $EQN
 "
 
 SUM=$(printf "%s" "$EQN" | sha1sum | cut -d ' ' -f 1)
-IMAGE="$DSTD/$SUM.png"
+IMAGE="$DSTD/$SUM.svg"
 ERRFILE="/tmp/awki_groff_error"
 ALIGNFILE="${IMAGE}.sty"
 
@@ -36,8 +36,10 @@ printf "%s" "$EQN" | \
     tee "$ERRFILE" | \
     awk '$0 !~ /^webeqn/'>&2 && \
 ps2eps "/tmp/$SUM.ps" 2>/dev/null && \
-gs >/dev/null -dSAFER -dBATCH -dNOPAUSE $GSOPTS \
-    -sOutputFile=$IMAGE /tmp/$SUM.eps
+epstopdf &>/dev/null /tmp/$SUM.eps /tmp/$SUM.pdf && \
+pdf2svg &>/dev/null /tmp/$SUM.pdf $IMAGE
+#gs >/dev/null -dSAFER -dBATCH -dNOPAUSE $GSOPTS \
+#    -sOutputFile=$IMAGE /tmp/$SUM.eps
 
 eval `awk '/^webeqn/ { print $2 }' "$ERRFILE"`
 echo "$rsb" > "$ALIGNFILE"
