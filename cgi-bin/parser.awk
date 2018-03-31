@@ -29,6 +29,21 @@ BEGIN {
 NR == 1 { print "<p>" }
 
 {
+	main()
+
+	close_tags()
+
+	if (blankline == 1) {
+		print "<p>"
+		blankline = 0
+	}
+
+	$0 = all_format($0)
+
+	print
+}
+
+function main() {
 	if (/^$/) {
 		blankline = 1
 		close_tags()
@@ -70,20 +85,24 @@ NR == 1 { print "<p>" }
 
 		next
 	} else if (/^ /) {
-		close_tags("pre")
+		print "<pre>"
+		print all_format($0)
 
-		if (pre != 1) {
-			print "<pre>"
-			pre = 1
-			blankline = 0
-		} else if (blankline == 1) {
-			print ""
-			blankline = 0
+		while (getline > 0) {
+			if (/^ /) {
+				print all_format($0)
+				continue
+			} else if (/^$/) {
+				print
+				continue
+			} else if (/^----/) {
+				print "<hr>\n"
+				continue
+			}
+			break
 		}
 
-		$0 = all_format($0)
-
-		print
+		main()
 		next
 	} else if (/^-/) {
 		heading_format()
@@ -100,7 +119,7 @@ NR == 1 { print "<p>" }
 		parse_list("ol", "ul")
 		print
 		next
-	} else if (/\t[^:][^:]*[ \t]+:[ \t]+.*$/) {
+	} else if (/\t[^:]+[ \t]+:[ \t]+.*$/) {
 		close_tags("dl")
 		sub(/^\t/, "")
 
@@ -108,7 +127,7 @@ NR == 1 { print "<p>" }
 		sub(/[ \t]+:.*$/, "", term)
 
 		def = $0
-		sub(/[^:][^:]*:[ \t]+/, "", def)
+		sub(/[^:]+:[ \t]+/, "", def)
 
 		if (dl != 1) {
 			print "<dl>"; dl = 1
@@ -118,17 +137,6 @@ NR == 1 { print "<p>" }
 		print "\t<dd>" def "</dd>"
 		next
 	}
-
-	close_tags()
-
-	if (blankline == 1) {
-		print "<p>"
-		blankline = 0
-	}
-
-	$0 = all_format($0)
-
-	print
 }
 
 END {
@@ -406,12 +414,6 @@ function close_tags(not)
 	# if list is parsed this line print it
 	if (not !~ "list") {
 		parse_list("ol", "ul")
-	}
-	# close monospace
-	if (not !~ "pre") {
-		if (pre == 1) {
-			print "</pre>"; pre = 0
-		}
 	}
 	# close dl
 	if (not !~ "dl") {
