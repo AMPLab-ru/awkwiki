@@ -138,53 +138,37 @@ END {
 
 function all_format(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
 {
-	split(fmt, sa, "")
 	strong = em = code = 0
 	wikilink = !0
 	i = 1
 
 	while (i <= length(fmt)) {
-
 		pref = substr(fmt, 1, i - 1);
 		tmp = substr(fmt, i);
+		tag = ""
 
 		if (tmp ~ /^''''''/) {
 			sub(/^''''''/, "", tmp)
-
-			fmt = pref tmp
-
 			wikilink = !wikilink
-			split(fmt, sa, "")
+			fmt = pref tmp
 			continue
 		}
 		if (tmp ~ /^'''/) {
 			sub(/^'''/, "", tmp)
-
-			fmt = pref (strong ? "</strong>" : "<strong>") tmp
-			i += (strong ? length("</strong>") : length("<strong>"))
-
+			tag = (strong ? "</strong>" : "<strong>")
 			strong = !strong
-			split(fmt, sa, "")
-			continue
-		}
-		if (tmp ~ /^''/) {
+		} else if (tmp ~ /^''/) {
 			sub(/^''/, "", tmp)
-
-			fmt = pref (em ? "</em>" : "<em>") tmp
-			i += (em ? length("</em>") : length("<em>"))
-
+			tag = (em ? "</em>" : "<em>")
 			em = !em
-			split(fmt, sa, "")
-			continue
-		}
-		if (tmp ~ /^``/) {
+		} else if (tmp ~ /^``/) {
 			sub(/^``/, "", tmp)
-
-			fmt = pref (code ? "</code>" : "<code>") tmp
-			i += (code ? length("</code>") : length("<code>"))
-
+			tag = (code ? "</code>" : "<code>")
 			code = !code
-			split(fmt, sa, "")
+		}
+		if (tag) {
+			fmt = pref tag tmp
+			i += length(tag)
 			continue
 		}
 		if (match(tmp, /^\$\$[^\$]*\$\$/)) {
@@ -194,7 +178,6 @@ function all_format(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
 			img = eqn_gen_image(eqn)
 
 			fmt = pref img suf
-			split(fmt, sa, "")
 			i += length(img)
 			continue
 		}
@@ -204,7 +187,6 @@ function all_format(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
 
 			i += length(link)
 			fmt = pref link tmp
-			split(fmt, sa, "")
 			continue
 		}
 		if (match(tmp, /^https?:\/\/[^ \t]*\.(jpg|jpeg|gif|png)/)) {
@@ -215,7 +197,6 @@ function all_format(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
 
 			i += length(link)
 			fmt = pref link tmp
-			split(fmt, sa, "")
 			continue
 		}
 		if (match(tmp, /^((https?|ftp|gopher):\/\/|(mailto|news):)[^ \t]*/)) {
@@ -228,7 +209,6 @@ function all_format(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
 
 			i += length(link)
 			fmt = pref link tmp
-			split(fmt, sa, "")
 			continue
 		}
 		if (match(tmp, "^" pagename_re)) {
@@ -240,7 +220,6 @@ function all_format(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
 
 				i += length(link)
 				fmt = pref link tmp
-				split(fmt, sa, "")
 				continue
 			}
 			else {
@@ -256,21 +235,18 @@ function all_format(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
 			sub(/^</, "\\&lt;", tmp)
 			i += 4
 			fmt = pref tmp
-			split(fmt, sa, "")
 			continue
 		}
 		if (tmp ~ /^>/) {
 			sub(/^>/, "\\&gt;", tmp)
 			i += 4
 			fmt = pref tmp
-			split(fmt, sa, "")
 			continue
 		}
 		if (tmp ~ /^&/) {
 			sub(/^&/, "&amp;", tmp)
 			i += length("&amp;")
 			fmt = pref tmp
-			split(fmt, sa, "")
 			continue
 		}
 
