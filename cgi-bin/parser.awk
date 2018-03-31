@@ -333,12 +333,17 @@ function wiki_url_format(fmt,	pref, ref, suf, n, name, link, ret, atag)
 
 		n = split(ref, a, "|")
 
+		for (i in a) {
+			substr("^ *", "", a[i])
+			substr(" *$", "", a[i])
+		}
+
 		name = link = a[1]
 
 		if (n > 1)
 			name = a[2]
 
-		if (link ~ pagename_re) {
+		if (link ~ "^" pagename_re "$") {
 			if (pages[link])
 				return "<a href=\""scriptname"/"link"\">"name"</a>"
 			else
