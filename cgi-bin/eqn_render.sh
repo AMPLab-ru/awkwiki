@@ -18,7 +18,7 @@ IMAGE="$DSTD/$SUM.svg"
 ERRFILE="/tmp/awki_groff_error"
 ALIGNFILE="${IMAGE}.sty"
 
-trap 'rm -f /tmp/$SUM.ps /tmp/$SUM.eps $ERRFILE' EXIT INT
+trap 'rm -f /tmp/$SUM.ps /tmp/$SUM.eps /tmp/$SUM.pdf $ERRFILE' EXIT INT
 
 if test -f "$IMAGE"; then
 	touch "$IMAGE";
