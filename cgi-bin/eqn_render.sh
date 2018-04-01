@@ -34,10 +34,10 @@ printf "%s" "$EQN" | \
     iconv -futf8 -tkoi8r $ROOT/cgi-bin/settings.tr - $ROOT/cgi-bin/get_baseline.tr	| \
     groff -e -Tps 2>&1 > "/tmp/$SUM.ps" | \
     tee "$ERRFILE" | \
-    awk '$0 !~ /^webeqn/'>&2 && \
-ps2eps "/tmp/$SUM.ps" 2>/dev/null && \
-epstopdf &>/dev/null /tmp/$SUM.eps /tmp/$SUM.pdf && \
-pdf2svg &>/dev/null /tmp/$SUM.pdf $IMAGE
+    awk '$0 !~ /^webeqn/'>&2
+ps2eps -f "/tmp/$SUM.ps" >/dev/null 2>&1
+epstopdf "/tmp/$SUM.eps" >/dev/null 2>&1
+pdf2svg /tmp/$SUM.pdf $IMAGE
 #gs >/dev/null -dSAFER -dBATCH -dNOPAUSE $GSOPTS \
 #    -sOutputFile=$IMAGE /tmp/$SUM.eps
 
