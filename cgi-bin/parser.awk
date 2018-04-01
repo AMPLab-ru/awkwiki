@@ -29,30 +29,30 @@ BEGIN {
 NR == 1 { print "<p>" }
 
 {
-	if (main() == "ok") {
+	if (wiki_format_marks() != "stop") {
 		if (blankline == 1) {
 			print "<p>"
 			blankline = 0
 		}
 
-		print all_format($0)
+		print wiki_format_line($0)
 	}
 }
 
-function main() {
+function wiki_format_marks() {
 	if (/^$/) {
 		blankline = 1
-		return ""
+		return "stop"
 	} else if (/^##$/) {
 		category_reference()
-		return ""
+		return "stop"
 	} else if (/^#/) {
 		sub(/^# */, "")
 		category_format()
-		return ""
+		return "stop"
 	} else if (/^%R/) {
 		ref_fmt()
-		return ""
+		return "stop"
 	} else if (/^%EQ$/) {
 		tmp = ""
 
@@ -72,31 +72,31 @@ function main() {
 		}
 
 		print eqn_gen_image(tmp)
-		return ""
+		return "stop"
 	} else if (/^===/) {
 		if (match($0, /{[-A-Za-z0-9_]+}/))
 			code_highlight()
 		else
-			non_format()
+			wiki_unformatted_block()
 
-		return ""
+		return "stop"
 	} else if (/^ /) {
 		print "<pre>"
 
 		do {
-			print all_format($0)
+			print wiki_format_line($0)
 			if (getline <= 0)
 				exit(1)
 		} while (/^ /)
 
 		print "</pre>"
-		return main()
+		return wiki_format_marks()
 	} else if (/^-/) {
 		heading_format()
-		return ""
+		return "stop"
 	} else if (/^\t+[1*]/) {
 		parse_list()
-		return main()
+		return wiki_format_marks()
 	} else if (/\t[^:]+[ \t]+:[ \t]+.*$/) {
 		print "<dl>"
 
@@ -107,12 +107,12 @@ function main() {
 		} while (/\t[^:]+[ \t]+:[ \t]+.*$/)
 
 		print "</dl>"
-		return main()
+		return wiki_format_marks()
 	}
-	return "ok"
+	return "continue"
 }
 
-function all_format(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
+function wiki_format_line(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
 {
 	strong = em = code = 0
 	wikilink = !0
@@ -415,7 +415,7 @@ function parse_list(	n, i, tabcount, list, tag)
 			print "<" tag ">"
 
 		sub(/^[1*]/, "")
-		print "\t<li>" all_format($0) "</li>"
+		print "\t<li>" wiki_format_line($0) "</li>"
 
 		list["maxlvl"] = tabcount
 		list[tabcount, "type"] = tag
@@ -486,7 +486,7 @@ function code_highlight()
 # For unformated data in:
 # ===
 # ===
-function non_format()
+function wiki_unformatted_block()
 {
 	print "\n<div class=\"mw-highlight\">"
 	print "<pre>"
@@ -539,7 +539,7 @@ function heading_format(	n)
 
 	n++
 
-	print "<h"n">" all_format($0) "</h"n">"
+	print "<h"n">" wiki_format_line($0) "</h"n">"
 }
 
 # For Terms:

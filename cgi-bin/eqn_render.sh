@@ -35,7 +35,7 @@ printf "%s" "$EQN" | \
     groff -e -Tps 2>&1 > "/tmp/$SUM.ps" | \
     tee "$ERRFILE" | \
     awk '$0 !~ /^webeqn/'>&2
-ps2eps -f "/tmp/$SUM.ps" >/dev/null 2>&1
+ps2eps -l -f "/tmp/$SUM.ps" >/dev/null 2>&1
 epstopdf "/tmp/$SUM.eps" >/dev/null 2>&1
 pdf2svg /tmp/$SUM.pdf $IMAGE
 #gs >/dev/null -dSAFER -dBATCH -dNOPAUSE $GSOPTS \
