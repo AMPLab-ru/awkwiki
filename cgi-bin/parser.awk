@@ -286,8 +286,8 @@ function wiki_url_format(fmt,	pref, ref, suf, n, name, link, ret, atag)
 		n = split(ref, a, "|")
 
 		for (i in a) {
-			substr("^ *", "", a[i])
-			substr(" *$", "", a[i])
+			a[i] = substr("^ *", "", a[i])
+			a[i] = substr(" *$", "", a[i])
 		}
 
 		name = link = a[1]
