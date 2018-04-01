@@ -14,11 +14,11 @@ $EQN
 "
 
 SUM=$(printf "%s" "$EQN" | sha1sum | cut -d ' ' -f 1)
-IMAGE="$DSTD/$SUM.png"
-ERRFILE="/tmp/awki_groff_error"
+IMAGE="$DSTD/$SUM.svg"
+ERRFILE="awki_groff_error"
 ALIGNFILE="${IMAGE}.sty"
 
-trap 'rm -f /tmp/$SUM.ps /tmp/$SUM.eps $ERRFILE' EXIT INT
+trap 'rm -f /tmp/$SUM.ps /tmp/$SUM.eps /tmp/$SUM.pdf $ERRFILE' EXIT INT
 
 if test -f "$IMAGE"; then
 	touch "$IMAGE";
@@ -36,8 +36,8 @@ printf "%s" "$EQN" | \
     tee "$ERRFILE" | \
     awk '$0 !~ /^webeqn/'>&2 && \
 ps2eps "/tmp/$SUM.ps" 2>/dev/null && \
-gs >/dev/null -dSAFER -dBATCH -dNOPAUSE $GSOPTS \
-    -sOutputFile=$IMAGE /tmp/$SUM.eps
+epstopdf "/tmp/$SUM.eps" "/tmp/$SUM.pdf" && \
+pdf2svg "/tmp/$SUM.pdf" "$IMAGE"
 
 eval `awk '/^webeqn/ { print $2 }' "$ERRFILE"`
 echo "$rsb" > "$ALIGNFILE"
