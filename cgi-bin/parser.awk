@@ -29,27 +29,40 @@ BEGIN {
 NR == 1 { print "<p>" }
 
 {
+	if (wiki_format_marks() != "stop") {
+		if (blankline == 1) {
+			print "<p>"
+			blankline = 0
+		}
+
+		print wiki_format_line($0)
+	}
+}
+
+function wiki_format_marks() {
 	if (/^$/) {
 		blankline = 1
-		close_tags()
-		next
+		return "stop"
 	} else if (/^##$/) {
-		close_tags()
 		category_reference()
-		next
+		return "stop"
 	} else if (/^#/) {
-		close_tags()
 		sub(/^# */, "")
-
 		category_format()
-		next
+		return "stop"
 	} else if (/^%R/) {
 		ref_fmt()
+		return "stop"
 	} else if (/^%EQ$/) {
 		tmp = ""
 
-		while (getline > 0 && $0 !~ /^%EN$/)
+		getline
+
+		while ($0 !~ /^%EN$/) {
 			tmp = tmp "\n" $0
+			if (getline <= 0)
+				exit(1)
+		}
 
 		tmp = substr(tmp, 2)
 
@@ -59,64 +72,42 @@ NR == 1 { print "<p>" }
 		}
 
 		print eqn_gen_image(tmp)
-		next
+		return "stop"
 	} else if (/^===/) {
-		close_tags()
-
 		if (match($0, /{[-A-Za-z0-9_]+}/))
 			code_highlight()
 		else
-			non_format()
+			wiki_unformatted_block()
 
-		next
+		return "stop"
 	} else if (/^ /) {
-		close_tags("pre")
+		print "<pre>"
 
-		if (pre != 1) {
-			print "<pre>"
-			pre = 1
-			blankline = 0
-		} else if (blankline == 1) {
-			print ""
-			blankline = 0
-		}
+		do {
+			print wiki_format_line($0)
+			if (getline <= 0)
+				exit(1)
+		} while (/^ /)
 
-		$0 = all_format($0)
-
-		print
-		next
+		print "</pre>"
+		return wiki_format_marks()
 	} else if (/^-/) {
 		heading_format()
-		next
-	} else if (/^\t+[*]/) {
-		close_tags("list")
-		$0 = all_format($0)
-		parse_list("ul", "ol")
-		print
-		next
-	} else if (/^\t+[1]/) {
-		close_tags("list")
-		$0 = all_format($0)
-		parse_list("ol", "ul")
-		print
-		next
-	} else if (/\t[^:][^:]*[ \t]+:[ \t]+.*$/) {
-		close_tags("dl")
-		sub(/^\t/, "")
+		return "stop"
+	} else if (/^\t+[1*]/) {
+		parse_list()
+		return wiki_format_marks()
+	} else if (/\t[^:]+[ \t]+:[ \t]+.*$/) {
+		print "<dl>"
 
-		term = $0
-		sub(/[ \t]+:.*$/, "", term)
+		do {
+			print term_format($0)
+			if (getline <= 0)
+				exit(1)
+		} while (/\t[^:]+[ \t]+:[ \t]+.*$/)
 
-		def = $0
-		sub(/[^:][^:]*:[ \t]+/, "", def)
-
-		if (dl != 1) {
-			print "<dl>"; dl = 1
-		}
-
-		print "<dt>" term "</dt>"
-		print "\t<dd>" def "</dd>"
-		next
+		print "</dl>"
+		return wiki_format_marks()
 	} else if (/^\{\|/) {
 		sub(/^\{\|[\ ]*/, "")
 
@@ -124,24 +115,9 @@ NR == 1 { print "<p>" }
 		print_tbl()
 		print "</table>\n</div>"
 
-		next
+		return "stop"
 	}
-
-	close_tags()
-
-	if (blankline == 1) {
-		print "<p>"
-		blankline = 0
-	}
-
-	$0 = all_format($0)
-
-	print
-}
-
-END {
-	$0 = ""
-	close_tags()
+	return "continue"
 }
 
 function print_tbl(i, j, attr, cattr, cells, colspan, rowspan)
@@ -176,7 +152,7 @@ function print_tbl(i, j, attr, cattr, cells, colspan, rowspan)
 					attr = attr " rowspan=\"" rowspan "\""
 				}
 
-				cells[i] = all_format(cells[i])
+				cells[i] = wiki_format_line(cells[i])
 				print "<td " attr ">"  cells[i] "</td>"
 			}
 		}
@@ -185,55 +161,39 @@ function print_tbl(i, j, attr, cattr, cells, colspan, rowspan)
 	print "</tr>"
 }
 
-function all_format(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
+function wiki_format_line(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
 {
-	split(fmt, sa, "")
 	strong = em = code = 0
 	wikilink = !0
 	i = 1
 
 	while (i <= length(fmt)) {
-
 		pref = substr(fmt, 1, i - 1);
 		tmp = substr(fmt, i);
+		tag = ""
 
 		if (tmp ~ /^''''''/) {
 			sub(/^''''''/, "", tmp)
-
-			fmt = pref tmp
-
 			wikilink = !wikilink
-			split(fmt, sa, "")
+			fmt = pref tmp
 			continue
 		}
 		if (tmp ~ /^'''/) {
 			sub(/^'''/, "", tmp)
-
-			fmt = pref (strong ? "</strong>" : "<strong>") tmp
-			i += (strong ? length("</strong>") : length("<strong>"))
-
+			tag = (strong ? "</strong>" : "<strong>")
 			strong = !strong
-			split(fmt, sa, "")
-			continue
-		}
-		if (tmp ~ /^''/) {
+		} else if (tmp ~ /^''/) {
 			sub(/^''/, "", tmp)
-
-			fmt = pref (em ? "</em>" : "<em>") tmp
-			i += (em ? length("</em>") : length("<em>"))
-
+			tag = (em ? "</em>" : "<em>")
 			em = !em
-			split(fmt, sa, "")
-			continue
-		}
-		if (tmp ~ /^``/) {
+		} else if (tmp ~ /^``/) {
 			sub(/^``/, "", tmp)
-
-			fmt = pref (code ? "</code>" : "<code>") tmp
-			i += (code ? length("</code>") : length("<code>"))
-
+			tag = (code ? "</code>" : "<code>")
 			code = !code
-			split(fmt, sa, "")
+		}
+		if (tag) {
+			fmt = pref tag tmp
+			i += length(tag)
 			continue
 		}
 		if (match(tmp, /^\$\$[^\$]*\$\$/)) {
@@ -243,17 +203,15 @@ function all_format(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
 			img = eqn_gen_image(eqn)
 
 			fmt = pref img suf
-			split(fmt, sa, "")
 			i += length(img)
 			continue
 		}
 		if (match(tmp, /^\[\[[^\[\]]+\]\]/)) {
-			link = wiki_url_format(substr(tmp, RSTART, RLENGTH))
+			link = wiki_format_url(substr(tmp, RSTART, RLENGTH))
 			sub(/^\[\[[^\[\]]+\]\]/, "", tmp)
 
 			i += length(link)
 			fmt = pref link tmp
-			split(fmt, sa, "")
 			continue
 		}
 		if (match(tmp, /^https?:\/\/[^ \t]*\.(jpg|jpeg|gif|png)/)) {
@@ -264,7 +222,6 @@ function all_format(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
 
 			i += length(link)
 			fmt = pref link tmp
-			split(fmt, sa, "")
 			continue
 		}
 		if (match(tmp, /^((https?|ftp|gopher):\/\/|(mailto|news):)[^ \t]*/)) {
@@ -277,7 +234,6 @@ function all_format(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
 
 			i += length(link)
 			fmt = pref link tmp
-			split(fmt, sa, "")
 			continue
 		}
 		if (match(tmp, "^" pagename_re)) {
@@ -289,7 +245,6 @@ function all_format(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
 
 				i += length(link)
 				fmt = pref link tmp
-				split(fmt, sa, "")
 				continue
 			}
 			else {
@@ -305,21 +260,18 @@ function all_format(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
 			sub(/^</, "\\&lt;", tmp)
 			i += 4
 			fmt = pref tmp
-			split(fmt, sa, "")
 			continue
 		}
 		if (tmp ~ /^>/) {
 			sub(/^>/, "\\&gt;", tmp)
 			i += 4
 			fmt = pref tmp
-			split(fmt, sa, "")
 			continue
 		}
 		if (tmp ~ /^&/) {
 			sub(/^&/, "&amp;", tmp)
 			i += length("&amp;")
 			fmt = pref tmp
-			split(fmt, sa, "")
 			continue
 		}
 
@@ -374,7 +326,7 @@ function html_ent_format(fmt,	sa, tmp)
 	return fmt
 }
 
-function wiki_url_format(fmt,	pref, ref, suf, n, name, link, ret, atag)
+function wiki_format_url(fmt,	i, pref, ref, suf, n, name, link, ret, atag)
 {
 	if (match(fmt, /^\[\[[^\[\]]+\]\]$/)) {
 		#strip square brackets
@@ -383,11 +335,12 @@ function wiki_url_format(fmt,	pref, ref, suf, n, name, link, ret, atag)
 		n = split(ref, a, "|")
 
 		name = link = a[1]
+		gsub(" ", "", link)
 
 		if (n > 1)
 			name = a[2]
 
-		if (link ~ pagename_re) {
+		if (link ~ "^" pagename_re "$") {
 			if (pages[link])
 				return "<a href=\""scriptname"/"link"\">"name"</a>"
 			else
@@ -469,71 +422,62 @@ function category_reference(	cmd, list)
 	close(cmd)
 }
 
-function close_tags(not)
+function parse_list(	n, i, tabcount, list, tag)
 {
-	# if list is parsed this line print it
-	if (not !~ "list") {
-		parse_list("ol", "ul")
-	}
-	# close monospace
-	if (not !~ "pre") {
-		if (pre == 1) {
-			print "</pre>"; pre = 0
+	do {
+		if (/^\t+[*]/)
+			tag = "ul"
+		else
+			tag = "ol"
+
+		tabcount = 0
+
+		while (/^\t+[1*]/) {
+			sub(/^\t/,"")
+			tabcount++
 		}
-	}
-	# close dl
-	if (not !~ "dl") {
-		if (dl == 1) {
-			print "</dl>"; dl = 0
+
+		#close foreign tags in reverse order
+		if (tabcount < list["maxlvl"]) {
+			for (i = list["maxlvl"]; i > tabcount; i--) {
+				#skip unused levels
+				if (list[i, "type"] == "")
+					continue
+
+				print "</" list[i, "type"] ">"
+				list[i, "type"] = ""
+			}
 		}
-	}
-}
 
-function parse_list(this, other,	n, i)
-{
-	thislist = list[this]
-	otherlist = list[other]
-	tabcount = 0
-
-	while (/^\t+[1*]/) {
-		sub(/^\t/,"")
-		tabcount++
-	}
-
-	#close foreign tags in reverse order
-	if (tabcount < list["maxlvl"]) {
-		for (i = list["maxlvl"]; i > tabcount; i--) {
-			#skip unused levels
-			if (list[i, "type"] == "")
-				continue
-
-			print "</" list[i, "type"] ">"
-			list[i, "type"] = ""
+		#if tag on same indent din't match, close it
+		if (list[tabcount, "type"] && list[tabcount, "type"] != tag) {
+			print "</" list[tabcount, "type"] ">"
+			list[tabcount, "type"] = ""
 		}
+
+
+		if (list[tabcount, "type"] == "")
+			print "<" tag ">"
+
+		sub(/^[1*]/, "")
+		print "\t<li>" wiki_format_line($0) "</li>"
+
+		list["maxlvl"] = tabcount
+		list[tabcount, "type"] = tag
+
+		if (getline <= 0)
+			exit(1)
+
+	} while (/^\t+[1*]/)
+
+	for (i = list["maxlvl"]; i > 0; i--) {
+		#skip unused levels
+		if (list[i, "type"] == "")
+			continue
+
+		print "</" list[i, "type"] ">"
+		list[i, "type"] = ""
 	}
-
-	if (!tabcount)
-		return
-
-	#if tag on same indent din't match, close it
-	if (tabcount && list[tabcount, "type"] &&
-	    list[tabcount, "type"] != this) {
-		#close this tag
-		print "</" list[tabcount, "type"] ">"
-		list[tabcount, "type"] = ""
-	}
-
-
-	if (list[tabcount, "type"] == "")
-		print "<" this ">"
-	
-	sub(/^[1*]/, "")
-	$0 = "\t<li>" $0 "</li>"
-
-	list["maxlvl"] = tabcount
-	list[tabcount, "type"] = this
-
-	return
 }
 
 function eqn_gen_image(eqn,	cmd, image, alt, align_property)
@@ -541,7 +485,7 @@ function eqn_gen_image(eqn,	cmd, image, alt, align_property)
 	alt = eqn
 	sub(/^[ \t]*/, "", s); sub(/[ \t]*$/, "", s)
 
-	cmd = "./eqn_render.sh '" eqn "'"
+	cmd = "nohup ./eqn_render.sh '" eqn "'"
 	cmd | getline image;
 	cmd | getline align_property;
 	close(cmd);
@@ -564,9 +508,13 @@ function code_highlight()
 	langname = tolower(langname)
 
 	tmp = ""
+	getline
 
-	while (getline > 0 && $0 !~ /^===$/)
+	while ($0 !~ /^===$/) {
 		tmp = tmp "\n" $0
+		if (getline <= 0)
+			exit(1)
+	}
 
 	tmp = substr(tmp, 2)
 	fname = mktemp("")
@@ -583,18 +531,21 @@ function code_highlight()
 # For unformated data in:
 # ===
 # ===
-function non_format()
+function wiki_unformatted_block()
 {
 	print "\n<div class=\"mw-highlight\">"
 	print "<pre>"
 
-	while (getline > 0 && $0 !~ /^===$/) {
-		$0 = html_ent_format($0)
-		print
+	getline
+
+	while ($0 !~ /^===$/) {
+		print html_ent_format($0)
+		if (getline <= 0)
+			exit(1)
 	}
 
-	print "</div>"
 	print "</pre>"
+	print "</div>"
 }
 
 function category_format(	tmp)
@@ -620,8 +571,6 @@ function category_format(	tmp)
 # For headings and horizontal line
 function heading_format(	n)
 {
-	close_tags()
-
 	while (/^-/) {
 		sub(/^-/, "")
 		n++
@@ -633,10 +582,27 @@ function heading_format(	n)
 		return
 	}
 
-	n += 1
+	n++
 
-	$0 = all_format($0)
-	$0 = "<h" n ">" $0 "</h" n ">"
-	print
+	print "<h"n">" wiki_format_line($0) "</h"n">"
+}
+
+# For Terms:
+# <Tab>Term : defenition
+# Requires to be in "<dl></dl>"
+function term_format(fmt)
+{
+	sub(/^\t/, "", fmt)
+	term = fmt
+	sub(/[ \t]+:.*$/, "", term)
+
+	def = fmt
+	sub(/[^:]+:[ \t]+/, "", def)
+
+	term = wiki_format_line(term)
+	def = wiki_format_line(def)
+
+	return "<dt>" term "</dt>\n\
+	<dd>" def "</dd>"
 }
 
