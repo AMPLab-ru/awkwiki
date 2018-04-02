@@ -158,7 +158,7 @@ function wiki_format_line(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
 			continue
 		}
 		if (match(tmp, /^\[\[[^\[\]]+\]\]/)) {
-			link = wiki_url_format(substr(tmp, RSTART, RLENGTH))
+			link = wiki_format_url(substr(tmp, RSTART, RLENGTH))
 			sub(/^\[\[[^\[\]]+\]\]/, "", tmp)
 
 			i += length(link)
@@ -277,7 +277,7 @@ function html_ent_format(fmt,	sa, tmp)
 	return fmt
 }
 
-function wiki_url_format(fmt,	pref, ref, suf, n, name, link, ret, atag)
+function wiki_format_url(fmt,	i, pref, ref, suf, n, name, link, ret, atag)
 {
 	if (match(fmt, /^\[\[[^\[\]]+\]\]$/)) {
 		#strip square brackets
@@ -285,9 +285,9 @@ function wiki_url_format(fmt,	pref, ref, suf, n, name, link, ret, atag)
 
 		n = split(ref, a, "|")
 
-		for (i in a) {
-			a[i] = substr("^ *", "", a[i])
-			a[i] = substr(" *$", "", a[i])
+		for (i = 1; i <= n; i++) {
+			sub("^ *", "", a[i])
+			sub(" *$", "", a[i])
 		}
 
 		name = link = a[1]
@@ -553,6 +553,9 @@ function term_format(fmt)
 
 	def = fmt
 	sub(/[^:]+:[ \t]+/, "", def)
+
+	term = wiki_format_line(term)
+	def = wiki_format_line(def)
 
 	return "<dt>" term "</dt>\n\
 	<dd>" def "</dd>"
