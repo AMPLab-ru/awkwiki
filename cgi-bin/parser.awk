@@ -285,12 +285,8 @@ function wiki_format_url(fmt,	i, pref, ref, suf, n, name, link, ret, atag)
 
 		n = split(ref, a, "|")
 
-		for (i = 1; i <= n; i++) {
-			sub("^ *", "", a[i])
-			sub(" *$", "", a[i])
-		}
-
 		name = link = a[1]
+		gsub(" ", "", link)
 
 		if (n > 1)
 			name = a[2]
