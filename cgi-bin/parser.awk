@@ -117,6 +117,14 @@ NR == 1 { print "<p>" }
 		print "<dt>" term "</dt>"
 		print "\t<dd>" def "</dd>"
 		next
+	} else if (/^\{\|/) {
+		sub(/^\{\|[\ ]*/, "")
+
+		print "<div align=\"" $0 "\">\n<table class=\"table\">"
+		print_tbl()
+		print "</table>\n</div>"
+
+		next
 	}
 
 	close_tags()
@@ -134,6 +142,47 @@ NR == 1 { print "<p>" }
 END {
 	$0 = ""
 	close_tags()
+}
+
+function print_tbl(i, j, attr, cattr, cells, colspan, rowspan)
+{
+	print "<tr>"
+
+	while (getline > 0 && $0 !~ /^\|\}$/) {
+		if (/^\|--/)
+			print "</tr><tr>"
+		else if (/^\|/) {
+			j = split($0, cells, /\ *\|\ */)
+
+			for (i = 2; i <= j; ++i) {
+				match(cells[i], /^[^\ ]+!/)
+				cattr = substr(cells[i], RSTART, RLENGTH - 1)
+				sub(/^[^\ ]+!\ */, "", cells[i])
+
+				attr = "class=\"table"
+				attr = attr (cattr ~ /h/ ? " head" : "") "\""
+
+				if (cattr ~ /l/)
+					attr = attr " align=\"left\""
+				else if (cattr ~ /c/)
+					attr = attr " align=\"center\""
+				else if (cattr ~ /r/)
+					attr = attr " align=\"right\""
+
+				if (match(cattr, /[1-9]{2}/)) {
+					colspan=substr(cattr, RSTART, 1)
+					rowspan=substr(cattr, RSTART + 1, 1)
+					attr = attr " colspan=\"" colspan "\""
+					attr = attr " rowspan=\"" rowspan "\""
+				}
+
+				cells[i] = all_format(cells[i])
+				print "<td " attr ">"  cells[i] "</td>"
+			}
+		}
+	}
+
+	print "</tr>"
 }
 
 function all_format(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)

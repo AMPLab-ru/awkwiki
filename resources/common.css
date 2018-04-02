@@ -64,6 +64,20 @@ label, input[type="button"], input[type="submit"], input[type="image"], button {
   cursor: pointer;
 }
 
+table.table {
+  border-collapse: collapse;
+}
+
+td.table.head {
+  background-color: #dedff5;
+  font-weight: bold;
+}
+
+td.table {
+  border: 1px solid #000;
+  padding: 4px;
+}
+
 #container {
   background: #fff;
   margin: 0 auto;
@@ -138,11 +152,6 @@ div#wrapper_inner {
 #content {
   width: 760px;
   text-align: justify;
-}
-
-#content table {
-  border-spacing: 10px 5px;
-  border-collapse: separate;
 }
 
 div#content {
