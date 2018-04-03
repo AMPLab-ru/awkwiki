@@ -238,6 +238,8 @@ function header(page,	i, action, label)
 		\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">"
 
 	print "<html>\n<head>\n<title>" page "</title>"
+	if (localconf["icon"])
+		print "<link rel=\"shortcut icon\" href=\"" localconf["icon"] "\">"
 	if (localconf["css"])
 		print "<link rel=\"stylesheet\" href=\"" localconf["css"] "\">"
 	if (query["action"] == "save" || (query["action"] == "login" && result == "ok") ||
