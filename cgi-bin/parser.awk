@@ -44,11 +44,11 @@ function wiki_format_marks() {
 		blankline = 1
 		return "stop"
 	} else if (/^##$/) {
-		category_reference()
+		wiki_reference_category()
 		return "stop"
 	} else if (/^#/) {
 		sub(/^# */, "")
-		category_format()
+		wiki_format_category()
 		return "stop"
 	} else if (/^%R/) {
 		ref_fmt()
@@ -75,7 +75,7 @@ function wiki_format_marks() {
 		return "stop"
 	} else if (/^===/) {
 		if (match($0, /{[-A-Za-z0-9_]+}/))
-			code_highlight()
+			wiki_highlight_code()
 		else
 			wiki_unformatted_block()
 
@@ -92,16 +92,16 @@ function wiki_format_marks() {
 		print "</pre>"
 		return wiki_format_marks()
 	} else if (/^-/) {
-		heading_format()
+		wiki_print_heading()
 		return "stop"
 	} else if (/^\t+[1*]/) {
-		parse_list()
+		wiki_print_list()
 		return wiki_format_marks()
 	} else if (/\t[^:]+[ \t]+:[ \t]+.*$/) {
 		print "<dl>"
 
 		do {
-			print term_format($0)
+			print wiki_format_term($0)
 			if (getline <= 0)
 				exit(1)
 		} while (/\t[^:]+[ \t]+:[ \t]+.*$/)
@@ -112,7 +112,7 @@ function wiki_format_marks() {
 		sub(/^\{\|[\ ]*/, "")
 
 		print "<div align=\"" $0 "\">\n<table class=\"table\">"
-		print_tbl()
+		wiki_print_tbl()
 		print "</table>\n</div>"
 
 		return "stop"
@@ -120,7 +120,7 @@ function wiki_format_marks() {
 	return "continue"
 }
 
-function print_tbl(i, j, attr, cattr, cells, colspan, rowspan)
+function wiki_print_tbl(i, j, attr, cattr, cells, colspan, rowspan)
 {
 	print "<tr>"
 
@@ -405,7 +405,7 @@ function html_escape(s) {
 	return s
 }
 
-function category_reference(	cmd, list)
+function wiki_reference_category(	cmd, list)
 {
 	cmd = "grep -wl '^#.*" pagename "' " datadir "*"
 
@@ -422,7 +422,7 @@ function category_reference(	cmd, list)
 	close(cmd)
 }
 
-function parse_list(	n, i, tabcount, list, tag)
+function wiki_print_list(	n, i, tabcount, list, tag)
 {
 	do {
 		if (/^\t+[*]/)
@@ -502,7 +502,7 @@ function eqn_gen_image(eqn,	cmd, image, alt, align_property)
 # For code highlighting in
 # ==={langname}
 # ===
-function code_highlight()
+function wiki_highlight_code()
 {
 	langname = substr($0, RSTART + 1, RLENGTH - 2)
 	langname = tolower(langname)
@@ -548,7 +548,7 @@ function wiki_unformatted_block()
 	print "</div>"
 }
 
-function category_format(	tmp)
+function wiki_format_category(	tmp)
 {
 	print "<br><hr>"
 	split($0, sa, "|")
@@ -569,7 +569,7 @@ function category_format(	tmp)
 }
 
 # For headings and horizontal line
-function heading_format(	n)
+function wiki_print_heading(	n)
 {
 	while (/^-/) {
 		sub(/^-/, "")
@@ -590,7 +590,7 @@ function heading_format(	n)
 # For Terms:
 # <Tab>Term : defenition
 # Requires to be in "<dl></dl>"
-function term_format(fmt)
+function wiki_format_term(fmt)
 {
 	sub(/^\t/, "", fmt)
 	term = fmt
