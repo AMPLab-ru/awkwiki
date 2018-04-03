@@ -28,6 +28,10 @@ datadir="./data/"
 css="/resources/common.css"
 # css="http://mysite.domain/mystylesheet.css"
 
+## icon:
+## HTTP URL for external icon file
+icon="/resources/icon.png"
+
 ## rcs:
 ## If true, RCS is used for revisioning.
 ## This will enable PageHistory!
