@@ -359,6 +359,8 @@ td.code { width: 98% }
 td.linenos { width: 2% }
 
 .highlighttable {
+  border-spacing: 10px 5px;
+  border-collapse: separate;
   background: #f9f9f9;
   width: 100%;
 }
