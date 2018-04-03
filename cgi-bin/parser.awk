@@ -56,7 +56,8 @@ function wiki_format_marks() {
 	} else if (/^%EQ$/) {
 		tmp = ""
 
-		getline
+		if (getline <= 0)
+			exit(1)
 
 		while ($0 !~ /^%EN$/) {
 			tmp = tmp "\n" $0
@@ -85,8 +86,10 @@ function wiki_format_marks() {
 
 		do {
 			print wiki_format_line($0)
-			if (getline <= 0)
+			if (getline <= 0) {
+				print "</pre>"
 				exit(1)
+			}
 		} while (/^ /)
 
 		print "</pre>"
@@ -102,16 +105,21 @@ function wiki_format_marks() {
 
 		do {
 			print wiki_format_term($0)
-			if (getline <= 0)
+			if (getline <= 0) {
+				print "</dl>"
 				exit(1)
+			}
 		} while (/\t[^:]+[ \t]+:[ \t]+.*$/)
 
 		print "</dl>"
 		return wiki_format_marks()
 	} else if (/^\{\|/) {
 		sub(/^\{\|[\ ]*/, "")
+		sub(/ *$/, "")
 
-		print "<div align=\"" $0 "\">\n<table class=\"table\">"
+		if (/^left$/ || /^center$/ || /^right$/)
+			print "<div align=\"" $0 "\">"
+		print "<table class=\"table\">"
 		wiki_print_tbl()
 		print "</table>\n</div>"
 
@@ -120,7 +128,7 @@ function wiki_format_marks() {
 	return "continue"
 }
 
-function wiki_print_tbl(i, j, attr, cattr, cells, colspan, rowspan)
+function wiki_print_tbl(	i, j, attr, cattr, cells, colspan, rowspan)
 {
 	print "<tr>"
 
@@ -465,8 +473,17 @@ function wiki_print_list(	n, i, tabcount, list, tag)
 		list["maxlvl"] = tabcount
 		list[tabcount, "type"] = tag
 
-		if (getline <= 0)
+		if (getline <= 0) {
+			for (i = list["maxlvl"]; i > 0; i--) {
+				#skip unused levels
+				if (list[i, "type"] == "")
+					continue
+
+				print "</" list[i, "type"] ">"
+				list[i, "type"] = ""
+			}
 			exit(1)
+		}
 
 	} while (/^\t+[1*]/)
 
@@ -502,18 +519,21 @@ function eqn_gen_image(eqn,	cmd, image, alt, align_property)
 # For code highlighting in
 # ==={langname}
 # ===
-function wiki_highlight_code()
+function wiki_highlight_code(		ex)
 {
 	langname = substr($0, RSTART + 1, RLENGTH - 2)
 	langname = tolower(langname)
 
+	ex = 0
 	tmp = ""
-	getline
 
-	while ($0 !~ /^===$/) {
+	if (getline <= 0)
+		ex = 1
+
+	while ($0 !~ /^===$/ && !ex) {
 		tmp = tmp "\n" $0
 		if (getline <= 0)
-			exit(1)
+			ex = 1
 	}
 
 	tmp = substr(tmp, 2)
@@ -526,6 +546,9 @@ function wiki_highlight_code()
 		print out
 	close(cmd)
 	rmfile(fname)
+
+	if (ex)
+		exit(1)
 }
 
 # For unformated data in:
@@ -533,15 +556,19 @@ function wiki_highlight_code()
 # ===
 function wiki_unformatted_block()
 {
+	if (getline <= 0)
+		exit(1)
+
 	print "\n<div class=\"mw-highlight\">"
 	print "<pre>"
 
-	getline
-
 	while ($0 !~ /^===$/) {
 		print html_ent_format($0)
-		if (getline <= 0)
+		if (getline <= 0) {
+			print "</pre>"
+			print "</div>"
 			exit(1)
+		}
 	}
 
 	print "</pre>"

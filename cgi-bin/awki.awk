@@ -576,7 +576,6 @@ function save(page, text, comment, filename,   dtext, date, file, username)
 function special_index(datadir)
 {
 	system("ls -1 " datadir " | " localconf["special_parser"] " -v special_index=yes")
-	
 }
 
 # list pages with last modified time (sorted by date)
@@ -623,9 +622,9 @@ function clear_str(str)
 # *** !Important for Security! ***
 function clear_pagename(str, r)
 {
-	if (match(str, pagename_re)) {
+	if (match(str, pagename_re))
 		return substr(str, RSTART, RLENGTH)
-	} else
+	else
 		return ""
 }
 
@@ -700,7 +699,7 @@ function load_config(script,   configfile, key, value)
 	# read configfile
 	while (getline <configfile > 0) {
 		# ignore comments
-		if ($0 ~ /^#/) continue
+		if ($0 ~ /^[ \t]*#/) continue
 		
 		if (match($0,/[ \t]*=[ \t]*/)) {
 			key = substr($0, 1, RSTART-1)
