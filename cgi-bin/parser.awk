@@ -119,6 +119,9 @@ function wiki_format_marks() {
 
 		if (/^left$/ || /^center$/ || /^right$/)
 			print "<div align=\"" $0 "\">"
+		else
+			print "<div>"
+
 		print "<table class=\"table\">"
 		wiki_print_tbl()
 		print "</table>\n</div>"
