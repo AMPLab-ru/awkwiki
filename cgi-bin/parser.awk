@@ -26,7 +26,14 @@ BEGIN {
 
 @include "./marks_refer.awk"
 
-NR == 1 { print "<p>" }
+NR == 1 {
+	print "<p>"
+
+	if (/^= /) {
+		wiki_print_pagename()
+		next
+	}
+}
 
 {
 	if (wiki_format_marks() != "stop") {
@@ -94,9 +101,6 @@ function wiki_format_marks() {
 
 		print "</pre>"
 		return wiki_format_marks()
-	} else if (/^= /) {
-		wiki_print_pagename();
-		return "stop"
 	} else if (/^-/) {
 		wiki_print_heading()
 		return "stop"
@@ -182,8 +186,8 @@ function wiki_format_line(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
 	i = 1
 
 	while (i <= length(fmt)) {
-		pref = substr(fmt, 1, i - 1);
-		tmp = substr(fmt, i);
+		pref = substr(fmt, 1, i - 1)
+		tmp = substr(fmt, i)
 		tag = ""
 
 		if (tmp ~ /^''''''/) {
@@ -314,12 +318,12 @@ function page_ref_format(link)
 function html_ent_format(fmt,	sa, tmp)
 {
 	#skip already escaped stuff
-	split(fmt, sa, "");
+	split(fmt, sa, "")
 	for (i = 1; i <= length(sa); i++) {
 		if (sa[i] != "&")
 			continue
 
-		tmp = substr(fmt, i);
+		tmp = substr(fmt, i)
 
 		if (match(tmp, /^&[a-z]+;/))
 			continue
@@ -408,13 +412,13 @@ function gen_href(link, text)
 }
 
 function html_escape(s) {
-	gsub(/"/, "\\&quot;", s);
-	gsub(/&/, "\\\\&", s);
-	gsub(/\[/, "\\&#91;", s);
-	gsub(/\]/, "\\&#93;", s);
+	gsub(/"/, "\\&quot;", s)
+	gsub(/&/, "\\\\&", s)
+	gsub(/\[/, "\\&#91;", s)
+	gsub(/\]/, "\\&#93;", s)
 
-	gsub(/\\/, "\\\\", s);
-	gsub(/&/, "\\\\&", s);
+	gsub(/\\/, "\\\\", s)
+	gsub(/&/, "\\\\&", s)
 
 	return s
 }
@@ -509,9 +513,9 @@ function eqn_gen_image(eqn,	cmd, image, alt, align_property)
 	sub(/^[ \t]*/, "", s); sub(/[ \t]*$/, "", s)
 
 	cmd = "nohup ./eqn_render.sh '" eqn "'"
-	cmd | getline image;
-	cmd | getline align_property;
-	close(cmd);
+	cmd | getline image
+	cmd | getline align_property
+	close(cmd)
 	#printf("awk offset is %s image is '%s'\n", align_property, image)
 	if (align_property == "")
 		align_property = "0"
@@ -605,7 +609,7 @@ function wiki_format_category(	tmp)
 # for example author name, or something
 function wiki_print_pagename()
 {
-	sub(/^= /, "");
+	sub(/^= /, "")
 	print "<h1>" wiki_format_line($0) "</h1>"
 }
 
