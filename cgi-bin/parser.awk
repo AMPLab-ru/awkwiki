@@ -22,18 +22,11 @@ BEGIN {
 			pages[page] = 1
 		}
 	close(cmd)
+
+	print "<p>"
 }
 
 @include "./marks_refer.awk"
-
-NR == 1 {
-	print "<p>"
-
-	if (/^= /) {
-		wiki_print_pagename()
-		next
-	}
-}
 
 {
 	if (wiki_format_marks() != "stop") {
@@ -87,6 +80,9 @@ function wiki_format_marks() {
 		else
 			wiki_unformatted_block()
 
+		return "stop"
+	} else if (/^= /) {
+		wiki_print_pagename()
 		return "stop"
 	} else if (/^ /) {
 		print "<pre>"
