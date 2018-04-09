@@ -131,6 +131,7 @@ div#wrapper_inner {
 
 #wrapper_inner h2 {
   padding-top: 15px;
+  border-bottom: 1px solid #a2a9b1;
   color: #333;
 }
 
