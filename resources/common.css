@@ -121,7 +121,16 @@ div#wrapper_inner {
   margin-top: -15px;
 }
 
+#wrapper_inner h1 {
+  color: #333;
+  padding-top: 10px;
+  font-size: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #a2a9b1;
+}
+
 #wrapper_inner h2 {
+  padding-top: 15px;
   color: #333;
 }
 

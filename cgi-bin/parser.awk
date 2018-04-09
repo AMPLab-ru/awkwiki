@@ -94,6 +94,9 @@ function wiki_format_marks() {
 
 		print "</pre>"
 		return wiki_format_marks()
+	} else if (/^= /) {
+		wiki_print_pagename();
+		return "stop"
 	} else if (/^-/) {
 		wiki_print_heading()
 		return "stop"
@@ -596,6 +599,14 @@ function wiki_format_category(	tmp)
 
 	$0 = substr(tmp, 4)
 	print
+}
+
+# TODO maybe we need to insert some additional attributes into pagename
+# for example author name, or something
+function wiki_print_pagename()
+{
+	sub(/^= /, "");
+	print "<h1>" wiki_format_line($0) "</h1>"
 }
 
 # For headings and horizontal line
