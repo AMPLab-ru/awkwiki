@@ -718,16 +718,10 @@ function load_config(script,   configfile, key, value)
 # Function for css updating
 function css_time(	arr, str, time, cmd)
 {
-	cmd = "stat " localconf["css"] " | grep '^Modify:'"
+	cmd = "stat --printf '%Y' ../" localconf["css"]
 
 	cmd | getline str
 
-	split(str, arr, " ")
-	str = arr[2]
-
-	split(arr[3], arr, ".")
-	gsub(":", "-", arr[1])
-
-	return str "-" arr[1];
+	return str
 }
 
