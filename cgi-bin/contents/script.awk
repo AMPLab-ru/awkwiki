@@ -20,9 +20,9 @@ BEGIN {
 					exit
 		}
 
-		if (/^EQ/) {
+		if (/^%EQ/) {
 			getline
-			while ($0 !~ /^EN/)
+			while ($0 !~ /^%EN/)
 				if (getline <= 0)
 					exit
 		}
