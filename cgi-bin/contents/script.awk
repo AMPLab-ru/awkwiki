@@ -27,7 +27,7 @@ BEGIN {
 					exit
 		}
 
-		if ((n = getdepth()) >= 4 || n < 2)
+		if ((n = getdepth()) >= 4)
 			next
 
 		trunk()
