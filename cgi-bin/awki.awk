@@ -313,7 +313,7 @@ function footer(page,	cmd, year)
 # send page to parser script
 function parse(name, filename, revision,	parser_cmd)
 {
-	parser_cmd = localconf["parser"] " -v datadir='" localconf["datadir"] "' -v pagename='" name "'" 
+	parser_cmd = localconf["parser"] " -v datadir='" localconf["datadir"] "' -v pagename='" name "' -v contents='" _("Contents") "'"
 	if (system("[ -f "filename" ]") == 0 ) {
 		if (revision) {
 			print "<em>" _("Displaying old version") " ("revision") " _("of") " <a href=\""scriptname"/" name "\">"name"</a>.</em>"

@@ -12,6 +12,7 @@
 BEGIN {
 	pagename_re = "[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*"
 	list["maxlvl"] = 0
+	content = 0
 	scriptname = ENVIRON["SCRIPT_NAME"]
 
 	cmd = "ls " datadir
@@ -610,7 +611,7 @@ function wiki_print_pagename()
 }
 
 # For headings and horizontal line
-function wiki_print_heading(	n)
+function wiki_print_heading(	n, link)
 {
 	while (/^-/) {
 		sub(/^-/, "")
@@ -625,7 +626,21 @@ function wiki_print_heading(	n)
 
 	n++
 
-	print "<h"n">" wiki_format_line($0) "</h"n">"
+	if (content == 0) {
+		wiki_print_content()
+		content = 1
+	}
+
+	gsub(/^[ \t]+/, "")
+	gsub(/[ \t]+$/, "")
+	gsub(/[ \t]+/, " ")
+	link = $0
+	gsub(/ /, "_", link)
+	gsub(/''''''/, "", link)
+	gsub(/'''/, "", link)
+	gsub(/''/, "", link)
+
+	print "<h"n" id=\"" link "\">" wiki_format_line($0) "</h"n">"
 }
 
 # For Terms:
@@ -645,5 +660,15 @@ function wiki_format_term(fmt)
 
 	return "<dt>" term "</dt>\n\
 	<dd>" def "</dd>"
+}
+
+function wiki_print_content(	cmd, tmp, file)
+{
+	file = datadir "/" pagename
+
+	cmd = "./contents/script.awk -v name=" contents " < " file
+
+	while (cmd | getline tmp > 0)
+		print tmp
 }
 
