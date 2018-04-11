@@ -1,5 +1,6 @@
 BEGIN {
 	syntax["%EQ"] = "eqn_fmt"
+	line_syntax["\\$\\$[^\\$]+\\$\\$"] = "eqn_fmt_inline"
 }
 
 function eqn_gen_image(eqn,	cmd, image, alt, align_property)
@@ -42,5 +43,13 @@ function eqn_fmt()
 	}
 
 	print eqn_gen_image(tmp)
+}
+
+function eqn_fmt_inline(str)
+{
+	sub(/^\$\$/, "", str)
+	sub(/\$\$$/, "", str)
+
+	return eqn_gen_image(str)
 }
 

@@ -26,7 +26,7 @@ BEGIN {
 	ctx["toc_disabled"] = 0
 	#
 
-#	syntax[regexp] = "handler"
+#	syntax["regexp"] = "handler"
 	syntax["$"] = "wiki_blank"
 	syntax["##"] = "wiki_reference_category"
 	syntax["#"] = "wiki_format_category"
@@ -36,6 +36,10 @@ BEGIN {
 	syntax["-"] = "wiki_print_heading"
 	syntax["\t+[1*]"] = "wiki_print_list"
 	syntax["\t[^:]+[ \t]+:[ \t]+.*$"] = "wiki_format_term"
+
+#	line_syntax["regexp"] = "handler"
+	str = "\\[\\[[^\\[\\]]+\\]\\]"
+	line_syntax[str] = "wiki_format_url"
 
 	print "<p>"
 }
@@ -51,7 +55,7 @@ BEGIN {
 function wiki_format_marks()
 {
 	for (i in syntax) {
-		if ($0 !~ ("^" i))
+		if ($0 !~ "^" i)
 			continue
 
 		str = syntax[i]
@@ -343,7 +347,17 @@ function wiki_format_term(	term, def)
 	wiki_format_marks()
 }
 
-function wiki_format_line(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
+function wiki_print_content(	cmd, tmp, file)
+{
+	file = datadir "/" pagename
+
+	cmd = "./contents/script.awk -v name=" contents " < " file
+
+	while (cmd | getline tmp > 0)
+		print tmp
+}
+
+function wiki_format_line(fmt,		i, j, pref, suf, strong, em, code, wikilink, fun, cont)
 {
 	strong = em = code = 0
 	wikilink = !0
@@ -351,113 +365,110 @@ function wiki_format_line(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
 
 	while (i <= length(fmt)) {
 		pref = substr(fmt, 1, i - 1)
-		tmp = substr(fmt, i)
+		suf = substr(fmt, i)
 		tag = ""
+		cont = 0
 
-		if (tmp ~ /^''''''/) {
-			sub(/^''''''/, "", tmp)
+		if (suf ~ /^''''''/) {
+			sub(/^''''''/, "", suf)
 			wikilink = !wikilink
-			fmt = pref tmp
+			fmt = pref suf
 			continue
 		}
-		if (tmp ~ /^'''/) {
-			sub(/^'''/, "", tmp)
+		if (suf ~ /^'''/) {
+			sub(/^'''/, "", suf)
 			tag = (strong ? "</strong>" : "<strong>")
 			strong = !strong
-		} else if (tmp ~ /^''/) {
-			sub(/^''/, "", tmp)
+		} else if (suf ~ /^''/) {
+			sub(/^''/, "", suf)
 			tag = (em ? "</em>" : "<em>")
 			em = !em
-		} else if (tmp ~ /^``/) {
-			sub(/^``/, "", tmp)
+		} else if (suf ~ /^``/) {
+			sub(/^``/, "", suf)
 			tag = (code ? "</code>" : "<code>")
 			code = !code
 		}
 		if (tag) {
-			fmt = pref tag tmp
+			fmt = pref tag suf
 			i += length(tag)
 			continue
 		}
-		if (match(tmp, /^\$\$[^\$]*\$\$/)) {
-			suf = substr(tmp, RLENGTH + 1)
-			eqn = substr(tmp, 3, RLENGTH - 4)
-
-			img = eqn_gen_image(eqn)
-
-			fmt = pref img suf
-			i += length(img)
-			continue
-		}
-		if (match(tmp, /^\[\[[^\[\]]+\]\]/)) {
-			link = wiki_format_url(substr(tmp, RSTART, RLENGTH))
-			sub(/^\[\[[^\[\]]+\]\]/, "", tmp)
-
-			i += length(link)
-			fmt = pref link tmp
-			continue
-		}
-		if (match(tmp, /^https?:\/\/[^ \t]*\.(jpg|jpeg|gif|png)/)) {
-			link = substr(tmp, 1, RLENGTH)
-			sub(/^https?:\/\/[^ \t]*\.(jpg|jpeg|gif|png)/, "", tmp)
+		if (match(suf, /^https?:\/\/[^ \t]*\.(jpg|jpeg|gif|png)/)) {
+			link = substr(suf, 1, RLENGTH)
+			sub(/^https?:\/\/[^ \t]*\.(jpg|jpeg|gif|png)/, "", suf)
 
 			link = "<img src=\"" link "\">"
 
 			i += length(link)
-			fmt = pref link tmp
+			fmt = pref link suf
 			continue
 		}
-		if (match(tmp, /^((https?|ftp|gopher):\/\/|(mailto|news):)[^ \t]*/)) {
-			link = substr(tmp, 1, RLENGTH)
-			sub(/^((https?|ftp|gopher):\/\/|(mailto|news):)[^ \t]*/, "", tmp)
+		if (match(suf, /^((https?|ftp|gopher):\/\/|(mailto|news):)[^ \t]*/)) {
+			link = substr(suf, 1, RLENGTH)
+			sub(/^((https?|ftp|gopher):\/\/|(mailto|news):)[^ \t]*/, "", suf)
 
 			link = "<a href=\"" link "\">" link "</a>"
 			# remove mailto: in link description
 			sub(/>mailto:/, ">", link)
 
 			i += length(link)
-			fmt = pref link tmp
+			fmt = pref link suf
 			continue
 		}
-		if (match(tmp, "^" pagename_re)) {
+		if (match(suf, /^&[a-z]+;/) || match(suf, /^&#[0-9]+;/)) {
+			i += RLENGTH
+			continue
+		}
+		if (suf ~ /^</) {
+			sub(/^</, "\\&lt;", suf)
+			i += 4
+			fmt = pref suf
+			continue
+		}
+		if (suf ~ /^>/) {
+			sub(/^>/, "\\&gt;", suf)
+			i += 4
+			fmt = pref suf
+			continue
+		}
+		if (suf ~ /^&/) {
+			sub(/^&/, "&amp;", suf)
+			i += length("&amp;")
+			fmt = pref suf
+			continue
+		}
+		if (match(suf, "^" pagename_re)) {
 			if (wikilink) {
-				link = substr(tmp, 1, RLENGTH)
-				sub("^" pagename_re, "", tmp)
+				link = substr(suf, 1, RLENGTH)
+				sub("^" pagename_re, "", suf)
 
 				link = page_ref_format(link)
 
 				i += length(link)
-				fmt = pref link tmp
-				continue
-			}
-			else {
+				fmt = pref link suf
+			} else
 				i += RLENGTH
-				continue
-			}
-		}
-		if (match(tmp, /^&[a-z]+;/) || match(tmp, /^&#[0-9]+;/)) {
-			i += RLENGTH
-			continue
-		}
-		if (tmp ~ /^</) {
-			sub(/^</, "\\&lt;", tmp)
-			i += 4
-			fmt = pref tmp
-			continue
-		}
-		if (tmp ~ /^>/) {
-			sub(/^>/, "\\&gt;", tmp)
-			i += 4
-			fmt = pref tmp
-			continue
-		}
-		if (tmp ~ /^&/) {
-			sub(/^&/, "&amp;", tmp)
-			i += length("&amp;")
-			fmt = pref tmp
+
 			continue
 		}
 
-		i += 1
+		for (j in line_syntax) {
+			if (!match(suf, "^" j))
+				continue
+
+			cont = 1
+
+			fun = line_syntax[j]
+			res = @fun(substr(suf, RSTART, RLENGTH))
+			sub("^" j, "", suf)
+
+			i += length(res)
+			fmt = pref res suf
+			break
+		}
+
+		if (cont == 0)
+			i += 1
 	}
 
 	if (strong)
@@ -468,16 +479,6 @@ function wiki_format_line(fmt,	i, pref, tmp, suf, strong, em, code, wikilink)
 		fmt = fmt "</code>"
 
 	return fmt
-}
-
-function wiki_print_content(	cmd, tmp, file)
-{
-	file = datadir "/" pagename
-
-	cmd = "./contents/script.awk -v name=" contents " < " file
-
-	while (cmd | getline tmp > 0)
-		print tmp
 }
 
 function page_ref_format(link)
