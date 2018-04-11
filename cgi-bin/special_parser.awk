@@ -54,14 +54,15 @@ special_history && NR > 1 {
 
 	#split the double-semicolon seperated information line
 	split($3, sp_array, ";;")
-	ip_address = sp_array[1]
+#	ip_address = sp_array[1]
 	date = sp_array[2]
 	comment = sp_array[3]
 	
 	if (NR == 2) 
 		revision = "current"
 	
-	print "<tr align=center><td>"revision"</td><td>"username"</td><td>"date"</td><td>"ip_address"</td><td>"comment"</td>"
+#	print "<tr align=center><td>"revision"</td><td>"username"</td><td>"date"</td><td>"ip_address"</td><td>"comment"</td>"
+	print "<tr align=center><td>"revision"</td><td>"username"</td><td>"date"</td><td>"comment"</td>"
 	print "<td><a href=\""scriptname"/"special_history
 	if (NR > 2)
 		print "?revision="revision
