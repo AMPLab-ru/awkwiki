@@ -1,5 +1,7 @@
 #!/usr/bin/awk -f
 
+@include "lib.awk"
+
 BEGIN {
 	print "\
 <div id=\"contents\">\n\
@@ -31,7 +33,7 @@ BEGIN {
 			next
 
 		trunk()
-		
+
 		if (n < max) {
 			for (i = max; i > n; i--) {
 				#skip unused levels
@@ -80,13 +82,11 @@ function getdepth(	n)
 
 function trunk(		sa, i, pref, str)
 {
-	gsub(/''''''/, "")
-	gsub(/'''/, "")
-	gsub(/''/, "")
+	$0 = rm_quotes($0)
 	gsub(/``/, "")
 
 	split($0, sa, "")
-	
+
 	for (i = 1; i <= length(sa); i++) {
 		if (sa[i] != "&")
 			continue
@@ -105,13 +105,11 @@ function trunk(		sa, i, pref, str)
 		tmp = tmp sa[i]
 	}
 	$0 = tmp
-	
+
 	gsub(/</, "\\&lt;")
 	gsub(/>/, "\\&gt;")
 
-	gsub("^[ \t]*", "")
-	gsub("[ \t]*$", "")
-	gsub("[ \t]+", " ")
+	$0 = strip_spaces($0)
 }
 
 function getlink(	str)

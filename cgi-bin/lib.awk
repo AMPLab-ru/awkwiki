@@ -15,3 +15,18 @@ function rmfile(fpath,		unused)
 	close(cmd)
 }
 
+function strip_spaces(s)
+{
+	gsub(/^[ \t]+/, "", s)
+	gsub(/[ \t]+$/, "", s)
+	gsub(/[ \t]+/, " ", s)
+	return s
+}
+
+function rm_quotes(s)
+{
+	gsub(/''/, "", s)
+	gsub(/'''/, "", s)
+	return s
+}
+

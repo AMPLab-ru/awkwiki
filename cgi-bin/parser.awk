@@ -12,7 +12,6 @@
 BEGIN {
 	pagename_re = "[[:upper:]][[:lower:]]+[[:upper:]][[:alpha:]]*"
 	list["maxlvl"] = 0
-	content = 0
 	scriptname = ENVIRON["SCRIPT_NAME"]
 
 	cmd = "ls " datadir
@@ -23,6 +22,8 @@ BEGIN {
 			pages[page] = 1
 		}
 	close(cmd)
+	ctx["toc_generated"] = 0
+	ctx["toc_disabled"] = 0
 
 	print "<p>"
 }
@@ -604,10 +605,25 @@ function wiki_format_category(	tmp)
 
 # TODO maybe we need to insert some additional attributes into pagename
 # for example author name, or something
-function wiki_print_pagename()
+function wiki_print_pagename(	arr, s)
 {
 	sub(/^= /, "")
-	print "<h1>" wiki_format_line($0) "</h1>"
+
+	# parse out magic words from pagename
+	while (match($0, /__[a-zA-Z0-9]+__/, arr)) {
+		switch (arr[0]) {
+		case "__NOTOC__":
+			ctx["toc_disabled"] = 1
+			break
+		}
+		s = substr($0, 1, RSTART - 1)
+		s = s substr($0, RSTART + RLENGTH)
+		$0 = s
+	}
+
+	$0 = strip_spaces($0)
+	if (length($0) > 0)
+		print "<h1>" wiki_format_line($0) "</h1>"
 }
 
 # For headings and horizontal line
@@ -626,19 +642,14 @@ function wiki_print_heading(	n, link)
 
 	n++
 
-	if (content == 0) {
+	if (!ctx["toc_disabled"] && ctx["toc_generated"] == 0) {
 		wiki_print_content()
-		content = 1
+		ctx["toc_generated"] = 1
 	}
 
-	gsub(/^[ \t]+/, "")
-	gsub(/[ \t]+$/, "")
-	gsub(/[ \t]+/, " ")
-	link = $0
+	link = $0 = strip_spaces($0)
 	gsub(/ /, "_", link)
-	gsub(/''''''/, "", link)
-	gsub(/'''/, "", link)
-	gsub(/''/, "", link)
+	link = rm_quotes(link)
 
 	print "<h"n" id=\"" link "\">" wiki_format_line($0) "</h"n">"
 }
