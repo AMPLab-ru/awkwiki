@@ -21,10 +21,8 @@ BEGIN {
 		}
 	close(cmd)
 
-	# Get rid of this
-	ctx["toc_generated"] = 0
-	ctx["toc_disabled"] = 0
-	#
+	ctx["print_toc"] = 1
+	ctx["blankln"] = 0
 
 #	syntax["regexp"] = "handler"
 	syntax["$"] = "wiki_blank"
@@ -63,9 +61,9 @@ function wiki_format_marks()
 		next
 	}
 
-	if (blankline == 1) {
+	if (ctx["blankln"] == 1) {
 		print "<p>"
-		blankline = 0
+		ctx["blankln"] = 0
 	}
 
 	print wiki_format_line($0)
@@ -73,7 +71,7 @@ function wiki_format_marks()
 
 function wiki_blank()
 {
-	blankline = 1
+	ctx["blankln"] = 1
 }
 
 function wiki_reference_category(	cmd, list)
@@ -191,7 +189,7 @@ function wiki_print_pagename(	arr, s)
 	while (match($0, /__[a-zA-Z0-9]+__/, arr)) {
 		switch (arr[0]) {
 		case "__NOTOC__":
-			ctx["toc_disabled"] = 1
+			ctx["print_toc"] = 0
 			break
 		}
 		s = substr($0, 1, RSTART - 1)
@@ -229,16 +227,16 @@ function wiki_print_heading(	n, link)
 	}
 
 	if (n >= 4) {
-		blankline = 1
+		ctx["blankln"] = 0
 		print "<hr>"
 		return
 	}
 
 	n++
 
-	if (!ctx["toc_disabled"] && ctx["toc_generated"] == 0) {
+	if (ctx["print_toc"]) {
 		wiki_print_content()
-		ctx["toc_generated"] = 1
+		ctx["print_toc"] = 0
 	}
 
 	link = $0 = strip_spaces($0)
