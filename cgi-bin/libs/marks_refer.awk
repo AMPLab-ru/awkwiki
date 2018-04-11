@@ -18,6 +18,8 @@ BEGIN {
 	fmt_suf = "\n\t</li>"
 
 	fmt_url = " — %U"
+
+	syntax["%R"] = "ref_fmt"
 }
 
 function fmt_string(a, s,	nsubs, tmp) {
@@ -45,13 +47,6 @@ function get_rec_lang(a,	i) {
 	}
 
 	return "ENG"
-}
-
-function arrlen(a,	i, x) {
-	for (x in a)
-		i++
-
-	return i
 }
 
 function add_ending_dot(s) {
