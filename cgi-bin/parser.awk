@@ -30,7 +30,7 @@ BEGIN {
 	syntax["$"] = "wiki_blank"
 	syntax["##"] = "wiki_reference_category"
 	syntax["#"] = "wiki_format_category"
-	syntax["==="] = "wiki_unformated_block"
+	syntax["==="] = "wiki_highlight_block"
 	syntax["= "] = "wiki_print_pagename"
 	syntax[" "] = "wiki_print_mono"
 	syntax["-"] = "wiki_print_heading"
@@ -42,6 +42,7 @@ BEGIN {
 
 
 @include "lib.awk"
+@include "plugins.awk"
 
 {
 	wiki_format_marks()
@@ -109,7 +110,7 @@ function wiki_format_category(	tmp)
 	print
 }
 
-function wiki_unformated_block()
+function wiki_highlight_block()
 {
 	if (match($0, /{[-A-Za-z0-9_]+}/))
 		wiki_highlight_code()

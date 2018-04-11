@@ -1,9 +1,5 @@
 #TODO: escape paths
 
-@include "./libs/eqn.awk"
-@include "./libs/tbl.awk"
-@include "./libs/marks_refer.awk"
-
 function arrlen(a,	i, x) {
 	for (x in a)
 		i++
