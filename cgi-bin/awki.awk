@@ -645,7 +645,7 @@ function encode(text,	idx, i, carr, ordarr, n, s)
 	s = ""
 	n = split("; ' \"", carr, " ")
 	split("%3B %22 %27", ordarr, " ")
-	for (i = 1; i < length(text); i++) {
+	for (i = 1; i <= length(text); i++) {
 		ch = substr (text, i, 1)
 		idx = arr_get_idx(carr, ch)
 		if (idx == 0)
