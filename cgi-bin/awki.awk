@@ -8,6 +8,7 @@
 ################################################################################
 
 @include "./hexcodes.awk"
+@include "./lib.awk"
 
 BEGIN {
 	# --- default options ---
@@ -109,8 +110,8 @@ BEGIN {
 		# *** !Important for Security! ***
 		# id is a filename, check it is sane
 		if (!match(cookies["id"], /[^a-zA-Z0-9]/)) {
-			if (system("[ -f " localconf["sessions"] cookies["id"] " ]") == 0) {
-				system("touch " localconf["sessions"] cookies["id"])
+			if (system("[ -f '" localconf["sessions"] cookies["id"] "' ]") == 0) {
+				system("touch '" localconf["sessions"] cookies["id"] "'")
 				auth_access = 1
 			}
 		} else {
@@ -196,8 +197,8 @@ function parse_cookies(cookies,		arr, n, i, key, value)
 	n = split(ENVIRON["HTTP_COOKIE"], arr, ";")
 	for (i = 1; i <= n; i++) {
 		if (match(arr[i], /=/)) {
-			key = substr(arr[i], 1, RSTART-1)
-			value = substr(arr[i], RSTART+RLENGTH)
+			key = encode(substr(arr[i], 1, RSTART-1))
+			value = encode(substr(arr[i], RSTART+RLENGTH))
 			cookies[key] = value
 		}
 	}
@@ -350,7 +351,7 @@ function farewell(cookie,	file, username)
 	file = localconf["sessions"] cookie
 	getline username <file
 	close(file)
-	system("rm -f " localconf["sessions"] cookie)
+	system("rm -f '" localconf["sessions"] cookie "'")
 
 	print "<span><b>" username  "</b>, "  _("you are logged out") "</span>"
 }
@@ -636,6 +637,23 @@ function clear_revision(str)
 		return substr(str, RSTART, RLENGTH)
 	else
 		return ""
+}
+
+# encode some chars from input data
+function encode(text,	idx, i, carr, ordarr, n, s)
+{
+	s = ""
+	n = split("; ' \"", carr, " ")
+	split("%3B %22 %27", ordarr, " ")
+	for (i = 1; i < length(text); i++) {
+		ch = substr (text, i, 1)
+		idx = arr_get_idx(carr, ch)
+		if (idx == 0)
+			s = s ch
+		else
+			s = s ordarr[idx]
+	}
+	return s
 }
 
 # decode urlencoded string

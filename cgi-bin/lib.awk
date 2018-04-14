@@ -1,5 +1,14 @@
 #TODO: escape paths
 
+function arr_get_idx(arr, val,		tmp)
+{
+	for (tmp in arr) {
+		if (val == arr[tmp])
+			return tmp
+	}
+	return 0;
+}
+
 function arrlen(a,	i, x) {
 	for (x in a)
 		i++
