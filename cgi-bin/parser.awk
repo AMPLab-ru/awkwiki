@@ -243,7 +243,7 @@ function wiki_print_heading(	n, link)
 	gsub(/ /, "_", link)
 	link = rm_quotes(link)
 
-	print "<h"n" id=\"" link "\">" wiki_format_line($0) "</h"n">"
+	print "<h"n" class=\"header\" id=\"" link "\">" wiki_format_line($0) "</h"n">"
 }
 
 function wiki_print_list(	n, i, tabcount, list, tag)
@@ -347,12 +347,13 @@ function wiki_format_term(	term, def)
 
 function wiki_print_content(	cmd, tmp, file)
 {
-	file = datadir "/" pagename
-
-	cmd = "./contents/script.awk -v name=" contents " < " file
-
-	while (cmd | getline tmp > 0)
-		print tmp
+	print "\
+<div id=\"contents\">\n\
+<div id=\"contents_title\">\n\
+	<h2>" contents "</h2>\n\
+</div>\n\
+<div id=\"contents-content\">\n\
+</div></div>"
 }
 
 function wiki_format_line(fmt,		i, j, pref, suf, strong, em, code, wikilink, fun, cont)
