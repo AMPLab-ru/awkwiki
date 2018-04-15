@@ -50,6 +50,54 @@ BEGIN {
 	wiki_format_marks()
 }
 
+END {
+	print "<script>\n"
+	print "\
+var cont = document.getElementById('contents-content');\n\
+var list = document.getElementsByClassName('header');\n\
+\n\
+var prev = 1;\n\
+var lvl = 0;\n\
+var buf = '';\n\
+\n\
+var i;\n\
+\n\
+for (i = 0; i < list.length; i++) {\n\
+	var cur;\n\
+\n\
+	switch(list[i].tagName) {\n\
+	case 'H2':\n\
+		cur = 2;\n\
+		break;\n\
+	case 'H3':\n\
+		cur = 3;\n\
+		break;\n\
+	case 'H4':\n\
+		cur = 4;\n\
+		break;\n\
+	}\n\
+\n\
+	if (cur > prev) {\n\
+		buf += '<ol>\\n';\n\
+		lvl++;\n\
+	} else if (cur < prev) {\n\
+		buf += '</ol>\\n';\n\
+		lvl--;\n\
+	}\n\
+	prev = cur;\n\
+\n\
+	buf += '\\n\\t<li><a href=\"#'\n\
+	+ list[i].id + '\">'\n\
+	+ list[i].innerHTML + '</a></li>\\n';\n\
+}\n\
+\n\
+for (i = 0; i < lvl; i++) {\n\
+	buf += '</ol>\\n';\n\
+}\n\
+cont.innerHTML += buf;\n\
+</script>"
+}
+
 function wiki_format_marks()
 {
 	for (i in syntax) {

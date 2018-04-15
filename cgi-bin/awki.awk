@@ -7,6 +7,7 @@
 # See the file `COPYING' for copyright notice.
 ################################################################################
 
+@include "./lib.awk"
 @include "./hexcodes.awk"
 
 BEGIN {
@@ -109,8 +110,8 @@ BEGIN {
 		# *** !Important for Security! ***
 		# id is a filename, check it is sane
 		if (!match(cookies["id"], /[^a-zA-Z0-9]/)) {
-			if (system("[ -f " localconf["sessions"] cookies["id"] " ]") == 0) {
-				system("touch " localconf["sessions"] cookies["id"])
+			if (system("[ -f '" localconf["sessions"] cookies["id"] "' ]") == 0) {
+				system("touch '" localconf["sessions"] cookies["id"] "'")
 				auth_access = 1
 			}
 		} else {
@@ -196,8 +197,8 @@ function parse_cookies(cookies,		arr, n, i, key, value)
 	n = split(ENVIRON["HTTP_COOKIE"], arr, ";")
 	for (i = 1; i <= n; i++) {
 		if (match(arr[i], /=/)) {
-			key = substr(arr[i], 1, RSTART-1)
-			value = substr(arr[i], RSTART+RLENGTH)
+			key = encode(substr(arr[i], 1, RSTART-1))
+			value = encode(substr(arr[i], RSTART+RLENGTH))
 			cookies[key] = value
 		}
 	}
@@ -308,52 +309,7 @@ function footer(page,	cmd, year)
 	print "</div></div></div>"
 	print "<div id=\"footer\"><div id=\"footer_inner\">" localconf["wiki_name"] " " year "</div></div>"
 	print "</div>\n"
-	print "<script>\n"
-	print "\
-var cont = document.getElementById('contents-content');\n\
-var list = document.getElementsByClassName('header');\n\
-\n\
-var prev = 1;\n\
-var lvl = 0;\n\
-var buf = '';\n\
-\n\
-var i;\n\
-\n\
-for (i = 0; i < list.length; i++) {\n\
-	var cur;\n\
-\n\
-	switch(list[i].tagName) {\n\
-	case 'H2':\n\
-		cur = 2;\n\
-		break;\n\
-	case 'H3':\n\
-		cur = 3;\n\
-		break;\n\
-	case 'H4':\n\
-		cur = 4;\n\
-		break;\n\
-	}\n\
-\n\
-	if (cur > prev) {\n\
-		buf += '<ol>\\n';\n\
-		lvl++;\n\
-	} else if (cur < prev) {\n\
-		buf += '</ol>\\n';\n\
-		lvl--;\n\
-	}\n\
-	prev = cur;\n\
-\n\
-	buf += '\\n\\t<li><a href=\"#'\n\
-	+ list[i].id + '\">'\n\
-	+ list[i].innerHTML + '</a></li>\\n';\n\
-}\n\
-\n\
-for (i = 0; i < lvl; i++) {\n\
-	buf += '</ol>\\n';\n\
-}\n\
-cont.innerHTML += buf;\n\
-	"
-	print "</script></body>\n</html>"
+	print "</body>\n</html>"
 }
 
 # send page to parser script
@@ -396,7 +352,7 @@ function farewell(cookie,	file, username)
 	file = localconf["sessions"] cookie
 	getline username <file
 	close(file)
-	system("rm -f " localconf["sessions"] cookie)
+	system("rm -f '" localconf["sessions"] cookie "'")
 
 	print "<span><b>" username  "</b>, "  _("you are logged out") "</span>"
 }
@@ -682,6 +638,23 @@ function clear_revision(str)
 		return substr(str, RSTART, RLENGTH)
 	else
 		return ""
+}
+
+# encode some chars from input data
+function encode(text,	idx, i, carr, ordarr, n, s)
+{
+	s = ""
+	n = split("; ' \"", carr, " ")
+	split("%3B %22 %27", ordarr, " ")
+	for (i = 1; i <= length(text); i++) {
+		ch = substr (text, i, 1)
+		idx = arr_get_idx(carr, ch)
+		if (idx == 0)
+			s = s ch
+		else
+			s = s ordarr[idx]
+	}
+	return s
 }
 
 # decode urlencoded string
