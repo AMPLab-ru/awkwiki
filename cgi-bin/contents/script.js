@@ -31,7 +31,6 @@ for (i = 0; i < list.length; i++) {
 	}
 	prev = cur;
 
-	list[i].id.replace('_', ' ');
 	buf += '\t<li><a href="#'
 	+ list[i].id + '">'
 	+ list[i].innerHTML + '</a></li>\n';
