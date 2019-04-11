@@ -3,3 +3,4 @@ sessions/*
 data/*
 !data/RCS/.gitignore
 awkpasswd
+awki.conf
